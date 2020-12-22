@@ -87,7 +87,7 @@ Usage: pek create
 # About:
 
 The private key is a random 256-bit value (represented by the variable 'k').
-#he public key is the secp256k1 generator point multiplied by the private key (represented by the variable 'P').
+The public key is the secp256k1 generator point multiplied by the private key (represented by the variable 'P').
 
 The shared key (see the 'sk' variable in ENCRYPT() and DECRYPT()) is derived
 using ECDH (Elliptic Curve Diffie-Hellman) Key Exchange. An ephemeral private/public key pair is
@@ -98,7 +98,7 @@ Once the shared key is obtained the plaintext is encrypted with it using AES 128
 Encryption Standard). Cipher block chaining (CBC) is employed. The initialization vector is the shared key 'sk'.
 
 This AES implementation operates on 128-bit blocks (it does use a 256-bit key).
-#The lower 128-bits and upper 128-bits are encrypted seperatly and then combined
+The lower 128-bits and upper 128-bits are encrypted seperatly and then combined
 (see AES_ENCRYPT() and AES_DECRYPT()).
 
 The public and private keys are represented by a 43-character BASE64 encoded string.
