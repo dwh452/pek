@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# This script refreshes the EXPECTED results in pt.sh
+# This script refreshes the EXPECTED results in pek_verify.sh
 # with the actual results of running the test suite.
 #
 
