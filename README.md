@@ -17,8 +17,9 @@ arguments and manually enter the command line arguments. This is most often need
 Windows environments.
 
 
+# Included Code
+These three components from other authors have been included into this script:
 ```
-# This program contains code from these other projects:
 #   Elliptic Curve   Jimmy Song, https://github.com/jimmysong/programmingbitcoin.git
 #   AES              Brandon Sterne, https://gist.github.com/raullenchai/2920069
 #   bytes_to_int     brunsgaard, https://stackoverflow.com/questions/21017698/converting-int-to-bytes-in-python-3/30375198#30375198
