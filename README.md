@@ -66,6 +66,24 @@ These three components from other authors have been included into this script:
 #    C:\> 
 ```
 
+# Usage
+```
+Usage: pek create
+       pek encrypt  <public-key>   <input>  <output>
+       pek decrypt  <private-key>  <input>  <output>
+       pek help
+
+       <public-key>   this is a public key obtained from calling "pek create"
+       <private-key>  this is a private key obtained from calling "pek create"
+       <input>        this is the filename to read, use "-" to read from standard input
+       <output>       this is the filename to write, use "-" to write to standard output
+
+    Example:
+        pek create
+        pek encrypt UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 f1.txt f1.pek
+        pek decrypt lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk f1.pek original.pek
+```
+
 # About:
 
 The private key is a random 256-bit value (represented by the variable 'k').
