@@ -1,9 +1,9 @@
 # Summary
-pek is a python3 script for public key encryption of files
+pek is a python 3 script for public key encryption of files
 
 # Description
 pek is a command to encrypt and decrypt files using public/private keys.
-Written for python3.
+Written for python 3.
 
 # About
 This program has been designed to be an easy-to-install and simple-to-use tool
