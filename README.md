@@ -99,17 +99,17 @@ The remaining data is the encrypted form of the plaintext.
 
 ## How To Use (Sender)                                                                                                                                             
                                                                                                                                                                   
-```                                                                                                                                                               
-$ vi msg.txt                                                                                                                                                      
-                                                                                                                                                                  
-$ pek encrypt hH0jrC6XPVAbV58QjZH7zaLiIdVCJzjS7jugO07BhEk msg.txt -                                                                                               
-BJM6GsQ4A9UOUzma3LtrXIMxCZBgRXbHsPI0VJOxL93lp0xvkXCyK7DKYSkZbK                                                                                                    
-G5vWNj2iIOOqvu7tHAROaWKRKynH25UTRsQ1Ny+lJbSmMNuyscfVLFGEpY8ofzm                                                                                                   
-PFvDlpdM70EESU+NftzbftPqxKAXeMtN89jwsVJcxuCzTBjxdYPWnBmFJulvlrm                                                                                                   
-bZmJtm2PC1EdWuSXyThUVenk2moy5TPV/gic3eE/re51kyZNfGuX/hp67zqRnG                                                                                                    
-ABE0f9cVMB3ALffBqKnOYt7h56xaDrkXDCrKAdLHUA0PxfykWJbSiiFxMFoZfBY                                                                                                   
-n+dKAhXVnLWwU6C0RDdUls1BDkspw                                                                                                                                     
-                                                                                                                                                                  
+```
+$ vi msg.txt
+
+$ pek encrypt hH0jrC6XPVAbV58QjZH7zaLiIdVCJzjS7jugO07BhEk msg.txt -
+BJM6GsQ4A9UOUzma3LtrXIMxCZBgRXbHsPI0VJOxL93lp0xvkXCyK7DKYSkZbK
+G5vWNj2iIOOqvu7tHAROaWKRKynH25UTRsQ1Ny+lJbSmMNuyscfVLFGEpY8ofzm
+PFvDlpdM70EESU+NftzbftPqxKAXeMtN89jwsVJcxuCzTBjxdYPWnBmFJulvlrm
+bZmJtm2PC1EdWuSXyThUVenk2moy5TPV/gic3eE/re51kyZNfGuX/hp67zqRnG
+ABE0f9cVMB3ALffBqKnOYt7h56xaDrkXDCrKAdLHUA0PxfykWJbSiiFxMFoZfBY
+n+dKAhXVnLWwU6C0RDdUls1BDkspw
+
 $ mail dad@daddomain.com                                                                                                                                          
 Hi Dad! I hope everything on the farm is going well. Nice to hear                                                                                                 
 about roscoe getting better after the porcupine encounter.                                                                                                       
