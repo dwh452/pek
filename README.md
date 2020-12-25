@@ -145,6 +145,7 @@ i/mRhKdJm+SE7X5YYgpxEA7LfLnroPNS7Q+yF//b0H1Sh5Y6zKHXGrl33XEjY8Q
 bRaMCemOMjuF8qAMFF/utYHcaHTcrPg7QFaKQJsSew1gUoSkR93iW9q0gKCoqNw
 wVsMf1vr34/T1FH4wD5t7hKPmgvz+fBV0XX4Mk4rArvQVLXoSnI+s/CalL5+l24
 F7jouWBsBAeZb39vgBmuYD8esmSHWuZm3Vm3EaRQt/a9yJ5cDrE
+^Z
 
 C:\> TYPE TEMP1.PEK
 Lawyer's name is Bob Filmore. He is at 555-789-1000 (ext. 567).
