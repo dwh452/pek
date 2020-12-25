@@ -112,7 +112,7 @@ n+dKAhXVnLWwU6C0RDdUls1BDkspw
                                                                                                                                                                   
 $ mail dad@daddomain.com                                                                                                                                          
 Hi Dad! I hope everything on the farm is going well. Nice to hear                                                                                                 
-aboutroscoe getting better after the porcupine encounter.                                                                                                       
+about roscoe getting better after the porcupine encounter.                                                                                                       
                                                                                                                                                                   
 I talked to the laywer and we're going to proceed, I've included all the                                                                                          
 details in this encrypted message. I used your latest                                                                                                             
