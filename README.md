@@ -97,3 +97,60 @@ The encrypted file format is a stream of BASE64 characters with allowance
 for whitespace appearing anywhere. The first 32-bytes are the the public ephemeral key.
 The remaining data is the encrypted form of the plaintext.
 
+## How To Use (Sender)                                                                                                                                             
+                                                                                                                                                                  
+```                                                                                                                                                               
+$ vi msg.txt                                                                                                                                                      
+                                                                                                                                                                  
+$ pek encrypt hH0jrC6XPVAbV58QjZH7zaLiIdVCJzjS7jugO07BhEk msg.txt -                                                                                               
+BJM6GsQ4A9UOUzma3LtrXIMxCZBgRXbHsPI0VJOxL93lp0xvkXCyK7DKYSkZbK                                                                                                    
+G5vWNj2iIOOqvu7tHAROaWKRKynH25UTRsQ1Ny+lJbSmMNuyscfVLFGEpY8ofzm                                                                                                   
+PFvDlpdM70EESU+NftzbftPqxKAXeMtN89jwsVJcxuCzTBjxdYPWnBmFJulvlrm                                                                                                   
+bZmJtm2PC1EdWuSXyThUVenk2moy5TPV/gic3eE/re51kyZNfGuX/hp67zqRnG                                                                                                    
+ABE0f9cVMB3ALffBqKnOYt7h56xaDrkXDCrKAdLHUA0PxfykWJbSiiFxMFoZfBY                                                                                                   
+n+dKAhXVnLWwU6C0RDdUls1BDkspw                                                                                                                                     
+                                                                                                                                                                  
+$ mail dad@daddomain.com                                                                                                                                          
+Hi Dad! I hope everything on the farm is going well. Nice to hear                                                                                                 
+about roscoe getting better after the porcupine encounter.                                                                                                       
+                                                                                                                                                                  
+I talked to the laywer and we're going to proceed, I've included all the                                                                                          
+details in this encrypted message. I used your latest                                                                                                             
+public key: hH0jrC6XPVAbV58QjZH7zaLiIdVCJzjS7jugO07BhEk                                                                                                           
+                                                                                                                                                                  
+---- cut here ---                                                                                                                                                 
+ooxO372Kg/yFG0GqUI54Q8PFLcqfL9HcCbl8BI+O4hmFfL25Eqwy8WVtUPMzGS                                                                                                    
+Ziu/QOrsnhU4JQzTVeeqrAFNGDEqvbGdQCmhZgQshr8r8EouZgtwLe6M5ST8SBx                                                                                                   
+i/mRhKdJm+SE7X5YYgpxEA7LfLnroPNS7Q+yF//b0H1Sh5Y6zKHXGrl33XEjY8Q                                                                                                   
+8eMj3eKqXYZq8eFf6/KADXnYPcUMyEy4eo3aRTjGA6jOQI8e0oMTTbiaQ8xlU7                                                                                                    
+bRaMCemOMjuF8qAMFF/utYHcaHTcrPg7QFaKQJsSew1gUoSkR93iW9q0gKCoqNw                                                                                                   
+wVsMf1vr34/T1FH4wD5t7hKPmgvz+fBV0XX4Mk4rArvQVLXoSnI+s/CalL5+l24                                                                                                   
+F7jouWBsBAeZb39vgBmuYD8esmSHWuZm3Vm3EaRQt/a9yJ5cDrE                                                                                                               
+---- cut here ---                                                                                                                                                 
+                                                                                                                                                                  
+Later, Bob                                                                                                                                                        
+.                                                                                                                                                                 
+EOT                                                                                                                                                               
+```                                                                                                                                                               
+                                                                                                                                                                  
+## How To Use (Recipient)                                                                                                                                                
+                                                                                                                                                                  
+```                                                                                                                                                               
+C:\> NOTEPAD.EXE temp1.pek                                                                                                                                        
+C:\> TYPE temp1.pek                                                                                                                                               
+ooxO372Kg/yFG0GqUI54Q8PFLcqfL9HcCbl8BI+O4hmFfL25Eqwy8WVtUPMzGS                                                                                                    
+Ziu/QOrsnhU4JQzTVeeqrAFNGDEqvbGdQCmhZgQshr8r8EouZgtwLe6M5ST8SBx                                                                                                   
+i/mRhKdJm+SE7X5YYgpxEA7LfLnroPNS7Q+yF//b0H1Sh5Y6zKHXGrl33XEjY8Q                                                                                                   
+8eMj3eKqXYZq8eFf6/KADXnYPcUMyEy4eo3aRTjGA6jOQI8e0oMTTbiaQ8xlU7                                                                                                    
+bRaMCemOMjuF8qAMFF/utYHcaHTcrPg7QFaKQJsSew1gUoSkR93iW9q0gKCoqNw                                                                                                   
+wVsMf1vr34/T1FH4wD5t7hKPmgvz+fBV0XX4Mk4rArvQVLXoSnI+s/CalL5+l24                                                                                                   
+F7jouWBsBAeZb39vgBmuYD8esmSHWuZm3Vm3EaRQt/a9yJ5cDrE                                                                                                               
+                                                                                                                                                                  
+C:\> PEK DECRYPT 9tJiRuzFXPIFM0yQMc2o4NFUld6VVTnh6GUYHkogxXI temp1.pek -                                                                                          
+Lawyer's name is Bob Filmore. He is at 555-789-1000 (ext. 567).                                                                                                   
+Use PIN 9019 when accessing the funds. All Debbi's funds are now                                                                                                  
+in escrow, like the lawyer said. The hearing is to be on January 2nd                                                                                              
+in Prescott, AZ. Thanks for everything, Sorry about all this mess!                                                                                                
+                                                                                                                                                                  
+C:\>                                                                                                                                                              
+```
