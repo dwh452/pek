@@ -137,7 +137,7 @@ EOT
 ## How To Use (Recipient)
 
 ```
-C:\> PEK DECRYPT 9tJiRuzFXPIFM0yQMc2o4NFUld6VVTnh6GUYHkogxXI - TEMP1.PEK
+C:\> PEK DECRYPT 9tJiRuzFXPIFM0yQMc2o4NFUld6VVTnh6GUYHkogxXI - MSG.TXT
 ooxO372Kg/yFG0GqUI54Q8PFLcqfL9HcCbl8BI+O4hmFfL25Eqwy8WVtUPMzGS
 Ziu/QOrsnhU4JQzTVeeqrAFNGDEqvbGdQCmhZgQshr8r8EouZgtwLe6M5ST8SBx
 i/mRhKdJm+SE7X5YYgpxEA7LfLnroPNS7Q+yF//b0H1Sh5Y6zKHXGrl33XEjY8Q
@@ -147,7 +147,7 @@ wVsMf1vr34/T1FH4wD5t7hKPmgvz+fBV0XX4Mk4rArvQVLXoSnI+s/CalL5+l24
 F7jouWBsBAeZb39vgBmuYD8esmSHWuZm3Vm3EaRQt/a9yJ5cDrE
 ^Z
 
-C:\> TYPE TEMP1.PEK
+C:\> TYPE MSG.TXT
 Lawyer's name is Bob Filmore. He is at 555-789-1000 (ext. 567).
 Use PIN 9019 when accessing the funds. All Debbi's funds are now
 in escrow, like the lawyer said. The hearing is to be on January 2nd
