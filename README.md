@@ -14,7 +14,7 @@ These three components from other authors have been included into this script:
 ```
    Elliptic Curve   Jimmy Song, https://github.com/jimmysong/programmingbitcoin.git
    AES              Brandon Sterne, https://gist.github.com/raullenchai/2920069
-   bytes_to_int     brunsgaard, https://stackoverflow.com/questions/21017698/converting-int-to-bytes-in-python-3/30375198#30375198
+   bytes_to_int     brunsgaard, https://stackoverflow.com/questions/34009653/convert-bytes-to-int
 ```
 
 # Dependencies
