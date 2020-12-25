@@ -9,11 +9,6 @@ be cut and pasted from a terminal window into an email message. This program was
 to be given to someone with minimal technical skills, such that they have a reasonable
 chance of getting its dependencies installed and running. I.e. communicating with your parents/siblings.
 
-See the COMMAND LINE OVERRIDE section at the bottom of this file to override the command line
-arguments and manually enter the command line arguments. This is most often needed in
-Windows environments.
-
-
 # Included Code
 These three components from other authors have been included into this script:
 ```
