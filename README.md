@@ -1,11 +1,8 @@
-# Summary
-pek is a python 3 script for public key encryption of files
-
 # Description
 pek is a command to encrypt and decrypt files using public/private keys.
 Written for python 3.
 
-# About
+# Purpose
 This program has been designed to be an easy-to-install and simple-to-use tool
 for exchanging small encrypted messages via email. The encrypted output was designed to
 be cut and pasted from a terminal window into an email message. This program was designed
@@ -20,50 +17,49 @@ Windows environments.
 # Included Code
 These three components from other authors have been included into this script:
 ```
-#   Elliptic Curve   Jimmy Song, https://github.com/jimmysong/programmingbitcoin.git
-#   AES              Brandon Sterne, https://gist.github.com/raullenchai/2920069
-#   bytes_to_int     brunsgaard, https://stackoverflow.com/questions/21017698/converting-int-to-bytes-in-python-3/30375198#30375198
-#
+   Elliptic Curve   Jimmy Song, https://github.com/jimmysong/programmingbitcoin.git
+   AES              Brandon Sterne, https://gist.github.com/raullenchai/2920069
+   bytes_to_int     brunsgaard, https://stackoverflow.com/questions/21017698/converting-int-to-bytes-in-python-3/30375198#30375198
 ```
 
-# Dependencies:
+# Dependencies
 ```
-#   os.urandom
-#   os.path.isfile
-#   os.path.exists
-#   os.getcwd
-#   sys.stdin
-#   sys.stdout
-#   sys.stderr
-#   sys.argv
-#   sys.exit
-#   io.StringIO
-#   copy(), open(), close(), read(), write()
+   os.urandom
+   os.path.isfile
+   os.path.exists
+   os.getcwd
+   sys.stdin
+   sys.stdout
+   sys.stderr
+   sys.argv
+   sys.exit
+   io.StringIO
+   copy(), open(), close(), read(), write()
 ```
 
-# Synopsis:
+# Synopsis
 ```
-#    C:\> PEK CREATE
-#    Public key:  BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4
-#    Private key: L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw
-#
-#    C:\> PEK ENCRYPT BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4 C:\AUTOEXEC.BAT SECRET.PEK
-#
-#    C:\> TYPE SECRET.PEK
-#    F71PzRXjySUtOtsvDv4xf+Xso/FYJ8BLXloVS9pez3ra5gMtxAOyYNIQNiURCL
-#    5gdyHHN0+R83hvcBSO9qU5AbDbtfRE5SbxaBuf5Va8kGinT2ye194FSEHzrOW6q
-#    1cIfcloKz1Z+Fj4qeqqtw1HBhc+U8u+fObWT7WIo3cKXEGAtCnZ0anrdc5ZRR8k
-#    +raIU8RQcatFmAXpMUTX9xXzg3MTKyNSs5pfx/XLhD3qr0dSphECpzl6GGvOy1
-#    1mu6Gr
-#
-#    C:\> PEK DECRYPT L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw SECRET.PEK -
-#    @echo off
-#    SET SOUND=C:\PROGRA~1\CREATIVE\CTSND
-#    SET BLASTER=A220 I5 D1 H5 P330 E620 T6
-#    SET PATH=C:\Windows;C:\
-#    LH C:\Windows\COMMAND\MSCDEX.EXE /D:123
-#
-#    C:\> 
+    C:\> PEK CREATE
+    Public key:  BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4
+    Private key: L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw
+
+    C:\> PEK ENCRYPT BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4 C:\AUTOEXEC.BAT SECRET.PEK
+
+    C:\> TYPE SECRET.PEK
+    F71PzRXjySUtOtsvDv4xf+Xso/FYJ8BLXloVS9pez3ra5gMtxAOyYNIQNiURCL
+    5gdyHHN0+R83hvcBSO9qU5AbDbtfRE5SbxaBuf5Va8kGinT2ye194FSEHzrOW6q
+    1cIfcloKz1Z+Fj4qeqqtw1HBhc+U8u+fObWT7WIo3cKXEGAtCnZ0anrdc5ZRR8k
+    +raIU8RQcatFmAXpMUTX9xXzg3MTKyNSs5pfx/XLhD3qr0dSphECpzl6GGvOy1
+    1mu6Gr
+
+    C:\> PEK DECRYPT L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw SECRET.PEK -
+    @echo off
+    SET SOUND=C:\PROGRA~1\CREATIVE\CTSND
+    SET BLASTER=A220 I5 D1 H5 P330 E620 T6
+    SET PATH=C:\Windows;C:\
+    LH C:\Windows\COMMAND\MSCDEX.EXE /D:123
+
+    C:\> 
 ```
 
 # Usage
@@ -81,11 +77,10 @@ Usage: pek create
     Example:
         pek create
         pek encrypt UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 f1.txt f1.pek
-        pek decrypt lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk f1.pek original.pek
+        pek decrypt lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk f1.pek original.txt
 ```
 
-# About:
-
+# About
 The private key is a random 256-bit value (represented by the variable 'k').
 The public key is the secp256k1 generator point multiplied by the private key (represented by the variable 'P').
 
