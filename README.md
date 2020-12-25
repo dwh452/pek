@@ -129,7 +129,7 @@ wVsMf1vr34/T1FH4wD5t7hKPmgvz+fBV0XX4Mk4rArvQVLXoSnI+s/CalL5+l24
 F7jouWBsBAeZb39vgBmuYD8esmSHWuZm3Vm3EaRQt/a9yJ5cDrE
 ---- cut here ---
 
-Later, Bob
+Later, Derek
 .
 EOT
 ```
