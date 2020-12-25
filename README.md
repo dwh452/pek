@@ -97,7 +97,7 @@ The encrypted file format is a stream of BASE64 characters with allowance
 for whitespace appearing anywhere. The first 32-bytes are the the public ephemeral key.
 The remaining data is the encrypted form of the plaintext.
 
-# How To Use (Sender)                                                                                                                                             
+## How To Use (Sender)                                                                                                                                             
                                                                                                                                                                   
 ```                                                                                                                                                               
 $ vi msg.txt                                                                                                                                                      
