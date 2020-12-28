@@ -1288,7 +1288,7 @@ def INPUT_WITH_DEFAULT(prompt, df):
     if str == None:
         return None
     elif str == "":
-        return df
+        return df.strip()
     else:
         return str
 
@@ -1309,8 +1309,8 @@ def MENU_CREATE():
 def MENU_ENCRYPT():
     global DPK
     global DF
-    sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
 
+    sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
     str1 = INPUT_WITH_DEFAULT("Enter public key", DPK)
     if str1 == None:
         return True
@@ -1337,7 +1337,6 @@ def MENU_DECRYPT():
     global DF
 
     sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
-
     str1 = INPUT_WITH_DEFAULT("Enter private key", DKK)
     if str1 == None:
         return True
@@ -1363,7 +1362,6 @@ def MENU_SHOWFILE():
     global DF
 
     sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
-
     str1 = INPUT_WITH_DEFAULT("Enter file to show", DF)
     if str1 == None:
         return True
@@ -1385,14 +1383,13 @@ def MENU_SHOWFILE():
     sys.stdout.write("--- cut here ---\n")
     sys.stdout.write(str + "\n")
     sys.stdout.write("--- cut here ---\n")
-
     DF = str1
-
     return False
 
 def MENU_CREATEFILE():
-    sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
+    global DF
 
+    sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
     str1 = INPUT("Enter file to create: ")
     if str1 == None:
         return True
@@ -1422,9 +1419,9 @@ def MENU_CREATEFILE():
     f = OPEN_FILE(str1, WRITE_TEXT)
     f.write(all_lines)
     CLOSE_FILE(f)
-
     sys.stdout.write("\n")
     sys.stdout.write("Created file: \"{}\".\n".format(str1))
+    DF = str1
     return False
 
 def MENU_HELP():
