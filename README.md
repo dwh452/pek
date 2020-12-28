@@ -59,9 +59,11 @@ These three components from other authors have been included into this script:
     1) Create Keys
     2) Encrypt file
     3) Decrypt file
-    4) Help
-    5) Quit
-    Choose 1-5? 5
+    4) Show File
+    5) Create File
+    6) Help
+    7) Quit
+    Choose 1-7? 7
 
     C:\>
 ```
