@@ -1382,7 +1382,9 @@ def MENU_SHOWFILE():
     str = f.read()
     CLOSE_FILE(f)
     sys.stdout.write("--- cut here ---\n")
-    sys.stdout.write(str + "\n")
+    sys.stdout.write(str)
+    if str[ len(str)-1 ] != "\n":
+        sys.stdout.write("\n")
     sys.stdout.write("--- cut here ---\n")
     DF = str1
     return False
