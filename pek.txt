@@ -1488,11 +1488,11 @@ def CMD_MENU():
         elif choice == 7:
             done = MENU_QUIT()
         elif choice == OVER:
-            last_error = "{} is too big! Enter a number between 1 and 6.\n".format(str)
+            last_error = "{} is too big! Enter a number between 1 and 7.\n".format(str)
         elif choice == UNDER:
-            last_error = "{} is too small! Enter a number between 1 and 6.\n".format(str)
+            last_error = "{} is too small! Enter a number between 1 and 7.\n".format(str)
         elif choice == BAD:
-            last_error = "Invalid choice '{}', enter a number between 1 and 6.\n".format(str)
+            last_error = "Invalid choice '{}', enter a number between 1 and 7.\n".format(str)
 
     return True
 
