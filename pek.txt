@@ -1112,6 +1112,7 @@ def USAGE(msg):
 Usage: pek create
        pek encrypt  <public-key>   <input>  <output>
        pek decrypt  <private-key>  <input>  <output>
+       pek menu
        pek help
 
        <public-key>   this is a public key obtained from calling "pek create"
@@ -1219,7 +1220,7 @@ def CMD_DECRYPT(args):
 
     return True
 
-def CMD_HELP(args):
+def CMD_HELP():
 
     USAGE("")
 
@@ -1242,40 +1243,113 @@ Decrypt recieved files using your private key.
 
     return True
 
-def PRINT_CWD():
-    sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
+def INPUT(prompt):
+	try:
+		str = input(prompt)
+	except:
+		return None
+	return str
 
-def CHECK_OVERRIDES(argv):
-    if 'OVERRIDE' not in globals():
-        return
+def MENU_CREATE():
+	args = ["pek", "create"]
+	CMD_CREATE(args)
 
-    if OVERRIDE == "create":
-        argv.clear()
-        argv.append("pek")
-        argv.append(OVERRIDE)
-        PRINT_CWD()
-        sys.stdout.write("OVERRIDE=\"{}\"\n".format(OVERRIDE))
+def MENU_ENCRYPT():
+	sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
 
-    if OVERRIDE == "encrypt" or OVERRIDE == "decrypt":
-        argv.clear()
-        argv.append("pek")
-        argv.append(OVERRIDE)
-        PRINT_CWD()
+	str1 = INPUT("Enter public key: ")
+	if str1 == None:
+		return True
 
-        sys.stdout.write("OVERRIDE=\"{}\"\n".format(OVERRIDE))
+	str2 = INPUT("Enter file to encrypt: ")
+	if str2 == None:
+		return True
 
-        if 'KEY' in globals():
-            argv.append(KEY)
-            sys.stdout.write("KEY=\"{}\"\n".format(KEY))
+	str3 = INPUT("Enter output file: ")
+	if str3 == None:
+		return True
 
-        if 'INPUT' in globals():
-            argv.append(INPUT)
-            sys.stdout.write("INPUT=\"{}\"\n".format(INPUT))
+	args = ["pek", "encrypt", str1, str2, str3]
+	success = CMD_ENCRYPT(args)
+	return success
 
-        if 'OUTPUT' in globals():
-            argv.append(OUTPUT)
-            sys.stdout.write("OUTPUT=\"{}\"\n".format(OUTPUT))
+def MENU_DECRYPT():
+	sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
 
+	str1 = INPUT("Enter private key: ")
+	if str1 == None:
+		return True
+
+	str2 = INPUT("Enter file to decrypt: ")
+	if str2 == None:
+		return True
+
+	str3 = INPUT("Enter output file: ")
+	if str3 == None:
+		return True
+
+	args = ["pek", "decrypt", str1, str2, str3]
+	success = CMD_DECRYPT(args)
+	return success
+
+def MENU_HELP():
+	CMD_HELP()
+	return False
+
+def MENU_QUIT():
+	return True
+
+def CMD_MENU():
+	last_error = None
+	done = False
+	while not done:
+		sys.stdout.write("""
+1) Create Keys
+2) Encrypt file
+3) Decrypt file
+4) Help
+5) Quit
+""")
+
+		if last_error != None:
+			sys.stdout.write("\n" + last_error + "\n")
+			last_error = None
+
+		str = INPUT("Choose 1-5? ")
+		if str == "":
+			continue
+		elif str == None:
+			str = "5"
+
+		try:
+			choice = int(str)
+			if choice > 5:
+				choice = -100
+			elif choice < 1:
+				choice = -200
+		except:
+			choice = -300
+
+		sys.stdout.write("\n")
+
+		if choice == 1:
+			done = MENU_CREATE()
+		elif choice == 2:
+			done = MENU_ENCRYPT()
+		elif choice == 3:
+			done = MENU_DECRYPT()
+		elif choice == 4:
+			done = MENU_HELP()
+		elif choice == 5:
+			done = MENU_QUIT()
+		elif choice == -100:
+			last_error = "'{}' is too big, enter a number between 1 and 5.\n".format(str)
+		elif choice == -200:
+			last_error = "'{}' is too small, enter a number between 1 and 5.\n".format(str)
+		elif choice == -300:
+			last_error = "Invalid number '{}', enter a number between 1 and 5.\n".format(str)
+
+	return True
 
 ######################################################################
 #
@@ -1284,8 +1358,6 @@ def CHECK_OVERRIDES(argv):
 ######################################################################
 
 def MAIN():
-    CHECK_OVERRIDES(sys.argv)
-
     if len(sys.argv) <= 1:
         USAGE("not enough arguments")
         sys.exit(1)
@@ -1294,59 +1366,18 @@ def MAIN():
 
     if command == "create":
         success = CMD_CREATE(sys.argv)
-    elif command == "help":
-        success = CMD_HELP(sys.argv)
     elif command == "encrypt":
         success = CMD_ENCRYPT(sys.argv)
     elif command == "decrypt":
         success = CMD_DECRYPT(sys.argv)
+    elif command == "help":
+        success = CMD_HELP()
+    elif command == "menu":
+        success = CMD_MENU()
     else:
         USAGE( "Unknown command '{}'.".format(command) )
         success = False
 
     return 0 if success else 1
-
-######################################################################
-# BEGIN COMMAND LINE OVERRIDE SECTION:
-#
-# Modify the variables below to override the command line
-# processing mode. This is needed on Windows when running the
-# script inside of the python application.
-#
-# OVERRIDE="off"         <---- turn off command line override section
-# KEY="dontcare"
-# INPUT="dontcare"
-# OUTPUT="dontcare"
-#
-# OVERRIDE="create"
-# KEY="dontcare"
-# INPUT="dontcare"
-# OUTPUT="dontcare"
-#
-# OVERRIDE="encrypt"
-# KEY="BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4"
-# INPUT="C:/Python Programs/f1.txt"
-# OUTPUT="C:/Python Programs/f1.pek"
-#
-# OVERRIDE="decrypt"
-# KEY="L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw"
-# INPUT="c:/Python Programs/f1.pek"
-# OUTPUT="c:/Python Programs/f3.txt"
-#
-# Notes:
-#   1. Use forward slashes (/) in filenames.
-#   2. Spaces in filenames are okay.
-#   3. Use "-" for the filename to read or write to the console.
-#
-######################################################################
-
-OVERRIDE="off"
-KEY="dontcare"
-INPUT="dontcare"
-OUTPUT="dontcare"
-
-######################################################################
-# END COMMAND LINE OVERRIDE SECTION.
-######################################################################
 
 MAIN()
