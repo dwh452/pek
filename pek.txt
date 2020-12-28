@@ -11,10 +11,6 @@
 # to be given to someone with minimal technical skills, such that they have a reasonable
 # chance of getting its dependencies installed and running. I.e. communicating with your parents/siblings.
 #
-# See the COMMAND LINE OVERRIDE section at the bottom of this file to override the command line
-# arguments and manually enter the command line arguments. This is most often needed in
-# Windows environments.
-#
 # This program contains code from these other projects:
 #   Elliptic Curve   Jimmy Song, https://github.com/jimmysong/programmingbitcoin.git
 #   AES              Brandon Sterne, https://gist.github.com/raullenchai/2920069
@@ -32,6 +28,7 @@
 #   sys.exit
 #   io.StringIO
 #   copy(), open(), close(), read(), write()
+#   input()
 #
 # Synopsis:
 #    C:\> PEK CREATE
@@ -53,6 +50,14 @@
 #    SET BLASTER=A220 I5 D1 H5 P330 E620 T6
 #    SET PATH=C:\Windows;C:\
 #    LH C:\Windows\COMMAND\MSCDEX.EXE /D:123
+#
+#    C:\> PEK MENU
+#    1) Create Keys
+#    2) Encrypt file
+#    3) Decrypt file
+#    4) Help
+#    5) Quit
+#    Choose 1-5? 5
 #
 #    C:\> 
 #
@@ -85,7 +90,8 @@
 #   Section 3: BASE64 Reading & Writing
 #   Section 4: CREATE, ENCRYPT, DECRYPT implementations
 #   Section 5: Command Line Processing
-#   Section 6: MAIN()
+#   Section 6: Interactive Menu
+#   Section 7: MAIN()
 #
 ######################################################################
 
@@ -1239,71 +1245,83 @@ Encrypt files using the recipient's public key.
 
 Decrypt recieved files using your private key.
 
+To see the interactive menu run PEK with the command line argument: "menu".
+
 """.format())
 
     return True
 
+######################################################################
+#
+# Section 6: Interactive Menu
+#
+######################################################################
+
 def INPUT(prompt):
-	try:
-		str = input(prompt)
-	except:
-		return None
-	return str
+    try:
+        str = input(prompt)
+    except:
+        return None # None means EOF
+    return str
 
 def MENU_CREATE():
-	args = ["pek", "create"]
-	CMD_CREATE(args)
+    args = ["pek", "create"]
+    CMD_CREATE(args)
 
 def MENU_ENCRYPT():
-	sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
+    sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
 
-	str1 = INPUT("Enter public key: ")
-	if str1 == None:
-		return True
+    str1 = INPUT("Enter public key: ")
+    if str1 == None:
+        return True
 
-	str2 = INPUT("Enter file to encrypt: ")
-	if str2 == None:
-		return True
+    str2 = INPUT("Enter file to encrypt: ")
+    if str2 == None:
+        return True
 
-	str3 = INPUT("Enter output file: ")
-	if str3 == None:
-		return True
+    str3 = INPUT("Enter output file: ")
+    if str3 == None:
+        return True
 
-	args = ["pek", "encrypt", str1, str2, str3]
-	success = CMD_ENCRYPT(args)
-	return success
+    args = ["pek", "encrypt", str1, str2, str3]
+    success = CMD_ENCRYPT(args)
+    return success
 
 def MENU_DECRYPT():
-	sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
+    sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
 
-	str1 = INPUT("Enter private key: ")
-	if str1 == None:
-		return True
+    str1 = INPUT("Enter private key: ")
+    if str1 == None:
+        return True
 
-	str2 = INPUT("Enter file to decrypt: ")
-	if str2 == None:
-		return True
+    str2 = INPUT("Enter file to decrypt: ")
+    if str2 == None:
+        return True
 
-	str3 = INPUT("Enter output file: ")
-	if str3 == None:
-		return True
+    str3 = INPUT("Enter output file: ")
+    if str3 == None:
+        return True
 
-	args = ["pek", "decrypt", str1, str2, str3]
-	success = CMD_DECRYPT(args)
-	return success
+    args = ["pek", "decrypt", str1, str2, str3]
+    success = CMD_DECRYPT(args)
+    return success
 
 def MENU_HELP():
-	CMD_HELP()
-	return False
+    CMD_HELP()
+    return False
 
 def MENU_QUIT():
-	return True
+    return True
 
 def CMD_MENU():
-	last_error = None
-	done = False
-	while not done:
-		sys.stdout.write("""
+    OVER = 6
+    UNDER = 7
+    BAD = 8
+
+    last_error = None
+    done = False
+    while not done:
+        sys.stdout.write("""
 1) Create Keys
 2) Encrypt file
 3) Decrypt file
@@ -1311,49 +1329,49 @@ def CMD_MENU():
 5) Quit
 """)
 
-		if last_error != None:
-			sys.stdout.write("\n" + last_error + "\n")
-			last_error = None
+        if last_error != None:
+            sys.stdout.write("\n" + last_error + "\n")
+            last_error = None
 
-		str = INPUT("Choose 1-5? ")
-		if str == "":
-			continue
-		elif str == None:
-			str = "5"
+        str = INPUT("Choose 1-5? ")
+        if str == None:
+            str = "5"
+        elif str.strip() == "":
+            continue
 
-		try:
-			choice = int(str)
-			if choice > 5:
-				choice = -100
-			elif choice < 1:
-				choice = -200
-		except:
-			choice = -300
+        try:
+            choice = int(str)
+            if choice > 5:
+                choice = OVER
+            elif choice < 1:
+                choice = UNDER
+        except:
+            choice = BAD
 
-		sys.stdout.write("\n")
+        sys.stdout.write("\n")
 
-		if choice == 1:
-			done = MENU_CREATE()
-		elif choice == 2:
-			done = MENU_ENCRYPT()
-		elif choice == 3:
-			done = MENU_DECRYPT()
-		elif choice == 4:
-			done = MENU_HELP()
-		elif choice == 5:
-			done = MENU_QUIT()
-		elif choice == -100:
-			last_error = "'{}' is too big, enter a number between 1 and 5.\n".format(str)
-		elif choice == -200:
-			last_error = "'{}' is too small, enter a number between 1 and 5.\n".format(str)
-		elif choice == -300:
-			last_error = "Invalid number '{}', enter a number between 1 and 5.\n".format(str)
+        if choice == 1:
+            done = MENU_CREATE()
+        elif choice == 2:
+            done = MENU_ENCRYPT()
+        elif choice == 3:
+            done = MENU_DECRYPT()
+        elif choice == 4:
+            done = MENU_HELP()
+        elif choice == 5:
+            done = MENU_QUIT()
+        elif choice == OVER:
+            last_error = "{} is too big! Enter a number between 1 and 5.\n".format(str)
+        elif choice == UNDER:
+            last_error = "{} is too small! Enter a number between 1 and 5.\n".format(str)
+        elif choice == BAD:
+            last_error = "Invalid choice '{}', enter a number between 1 and 5.\n".format(str)
 
-	return True
+    return True
 
 ######################################################################
 #
-# Section 6: MAIN()
+# Section 7: MAIN()
 #
 ######################################################################
 

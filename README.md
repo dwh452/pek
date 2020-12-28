@@ -54,7 +54,15 @@ These three components from other authors have been included into this script:
     SET PATH=C:\Windows;C:\
     LH C:\Windows\COMMAND\MSCDEX.EXE /D:123
 
-    C:\> 
+    C:\> PEK MENU
+    1) Create Keys
+    2) Encrypt file
+    3) Decrypt file
+    4) Help
+    5) Quit
+    Choose 1-5? 5
+
+    C:\>
 ```
 
 # Usage
@@ -62,6 +70,7 @@ These three components from other authors have been included into this script:
 Usage: pek create
        pek encrypt  <public-key>   <input>  <output>
        pek decrypt  <private-key>  <input>  <output>
+       pek menu
        pek help
 
        <public-key>   this is a public key obtained from calling "pek create"
@@ -154,4 +163,23 @@ in escrow, like the lawyer said. The hearing is to be on January 2nd
 in Prescott, AZ. Thanks for everything, Sorry about all this mess!
 
 C:\>
+```
+
+# Frequently Asked Questions
+```
+1. Why does the pek.txt script end in the '.txt' extension instead
+of the more conventional '.py'?
+
+The intention of this script was to be sent over email. People I
+wanted to communicate securly with would be sent this file via email.
+I found that my email applications made it hard to interact with
+a file that ended in the '.py' extension, for various reasons:
+
+ a. The .py extension isn't understood so it cannot be viewed.
+ b. The .py extension is considered an executable and so won't let
+    the user interact with it easily.
+
+By contrast the .txt extension was great to interact with.
+The .txt extension was tested on windows, linux, mac and
+all the python interpreters handled it without issues.
 ```
