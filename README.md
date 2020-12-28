@@ -166,7 +166,7 @@ C:\>
 ```
 
 # Frequently Asked Questions
-```
+
 1. Why does the pek.txt script end in the '.txt' extension instead
 of the more conventional '.py'?
 
@@ -175,11 +175,10 @@ wanted to communicate securly with would be sent this file via email.
 I found that my email applications made it hard to interact with
 a file that ended in the '.py' extension, for various reasons:
 
- a. The .py extension isn't understood so it cannot be viewed.
- b. The .py extension is considered an executable and so won't let
+ 1. The .py extension isn't understood so it cannot be viewed.
+ 2. The .py extension is considered an executable and so won't let
     the user interact with it easily.
 
 By contrast the .txt extension was great to interact with.
 The .txt extension was tested on windows, linux, mac and
 all the python interpreters handled it without issues.
-```
