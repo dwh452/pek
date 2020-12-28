@@ -1250,13 +1250,13 @@ C:\> pek encrypt BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4 f1.txt f2.pek
 
 C:\> pek decrypt L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw f2.pek f3.txt
 
-The files f1.txt and f3.txt will be the same after running these commands.
+ The files f1.txt and f3.txt will be the same after running these commands.
 
-Encrypt files using the recipient's public key.
-
-Decrypt recieved files using your private key.
-
-To see the interactive menu run PEK with the command line argument: "menu".
+ * Encrypt files using the recipient's public key.
+ * Decrypt recieved files using your private key.
+ * For interactive menu: run PEK with the command line argument "menu".
+ * Use ^D to signal end-of-file while typing on MacOS/Linux   press CTRL and D
+ * Use ^Z to signal end-of-file while typing on Windows       press CTRL and Z
 
 """.format())
 
