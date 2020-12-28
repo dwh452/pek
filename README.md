@@ -30,6 +30,7 @@ These three components from other authors have been included into this script:
    sys.exit
    io.StringIO
    copy(), open(), close(), read(), write()
+   input()
 ```
 
 # Synopsis
