@@ -1035,7 +1035,7 @@ def ENCODE_KEY(key):
 
 def CHECK_KEY(str):
     if len(str) != 43:
-        return "key must be exactly 43 characters long, not {}".format(len(str))
+        return "must be exactly 43 characters long, not {}".format(len(str))
 
     for i in range(0, len(str)):
         if not IS_BASE64_CHAR(str[i]):
@@ -1129,7 +1129,7 @@ Usage: pek create
     Example:
         pek create
         pek encrypt UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 f1.txt f1.pek
-        pek decrypt lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk f1.pek original.pek
+        pek decrypt lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk f1.pek original.txt
 
 {}
 """.format(msg))
