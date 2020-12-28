@@ -1298,13 +1298,10 @@ def MENU_CREATE():
     global DKK
 
     keypair = CREATE()
-
     DPK = ENCODE_KEY(keypair[0])
     DKK = ENCODE_KEY(keypair[1])
-
     sys.stdout.write("Public key:  {}\n".format(DPK))
     sys.stdout.write("Private key: {}\n".format(DKK))
-
     return False
 
 def MENU_ENCRYPT():
