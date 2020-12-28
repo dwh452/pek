@@ -55,9 +55,10 @@
 #    1) Create Keys
 #    2) Encrypt file
 #    3) Decrypt file
-#    4) Help
-#    5) Quit
-#    Choose 1-5? 5
+#    4) Show File
+#    5) Help
+#    6) Quit
+#    Choose 1-6? 6
 #
 #    C:\> 
 #
@@ -1108,7 +1109,16 @@ def OPEN_FILE(filename, mode):
     return open(filename, mode)
 
 def CLOSE_FILE(f):
-    f.close()
+    if f == sys.stdin:
+        return
+    elif f == sys.stdin.buffer:
+        return
+    elif f == sys.stdout:
+        return
+    elif f == sys.stdout.buffer:
+        return
+    else:
+        f.close()
 
 def REPORT_ERROR(msg):
     sys.stderr.write("{}\n".format(msg))
@@ -1257,6 +1267,10 @@ To see the interactive menu run PEK with the command line argument: "menu".
 #
 ######################################################################
 
+DPK  = ""   # Default public key (blank means not set)
+DKK  = ""   # Default private key (blank means not set)
+DF   = ""   # Default file name (blank means not set)
+
 def INPUT(prompt):
     try:
         str = input(prompt)
@@ -1264,18 +1278,44 @@ def INPUT(prompt):
         return None # None means EOF
     return str
 
+def INPUT_WITH_DEFAULT(prompt, df):
+    if df.strip() != "":
+        prompt = prompt + " [" + df + "]: ";
+    else:
+        prompt = prompt + ": ";
+
+    str = INPUT(prompt)
+    if str == None:
+        return None
+    elif str == "":
+        return df
+    else:
+        return str
+
 def MENU_CREATE():
-    args = ["pek", "create"]
-    CMD_CREATE(args)
+    global DPK
+    global DKK
+
+    keypair = CREATE()
+
+    DPK = ENCODE_KEY(keypair[0])
+    DKK = ENCODE_KEY(keypair[1])
+
+    sys.stdout.write("Public key:  {}\n".format(DPK))
+    sys.stdout.write("Private key: {}\n".format(DKK))
+
+    return False
 
 def MENU_ENCRYPT():
+    global DPK
+    global DF
     sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
 
-    str1 = INPUT("Enter public key: ")
+    str1 = INPUT_WITH_DEFAULT("Enter public key", DPK)
     if str1 == None:
         return True
 
-    str2 = INPUT("Enter file to encrypt: ")
+    str2 = INPUT_WITH_DEFAULT("Enter file to encrypt", DF)
     if str2 == None:
         return True
 
@@ -1285,16 +1325,24 @@ def MENU_ENCRYPT():
 
     args = ["pek", "encrypt", str1, str2, str3]
     success = CMD_ENCRYPT(args)
-    return success
+    if success:
+        sys.stdout.write("Encrypted the file \"{}\". Output written to \"{}\".\n".format(str2, str3))
+        DPK = str1
+        DF = str3
+
+    return False
 
 def MENU_DECRYPT():
+    global DKK
+    global DF
+
     sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
 
-    str1 = INPUT("Enter private key: ")
+    str1 = INPUT_WITH_DEFAULT("Enter private key", DKK)
     if str1 == None:
         return True
 
-    str2 = INPUT("Enter file to decrypt: ")
+    str2 = INPUT_WITH_DEFAULT("Enter file to decrypt", DF)
     if str2 == None:
         return True
 
@@ -1304,7 +1352,80 @@ def MENU_DECRYPT():
 
     args = ["pek", "decrypt", str1, str2, str3]
     success = CMD_DECRYPT(args)
-    return success
+    if success:
+        sys.stdout.write("Decrypted the file \"{}\". Output written to \"{}\".\n".format(str2, str3))
+        DKK = str1
+        DF = str3
+
+    return False
+
+def MENU_SHOWFILE():
+    global DF
+
+    sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
+
+    str1 = INPUT_WITH_DEFAULT("Enter file to show", DF)
+    if str1 == None:
+        return True
+
+    if str1 == "-":
+        sys.stdout.write("Invalid filename \"-\"\n")
+        return False
+
+    rc = CHECK_INPUT(str1)
+    if rc != None:
+        sys.stdout.write("{}: {}\n".format(str1, rc))
+        return False
+
+    sys.stdout.write("Showing file: \"{}\".\n".format(str1))
+
+    f = OPEN_FILE(str1, READ_TEXT)
+    str = f.read()
+    CLOSE_FILE(f)
+    sys.stdout.write("--- cut here ---\n")
+    sys.stdout.write(str + "\n")
+    sys.stdout.write("--- cut here ---\n")
+
+    DF = str1
+
+    return False
+
+def MENU_CREATEFILE():
+    sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
+
+    str1 = INPUT("Enter file to create: ")
+    if str1 == None:
+        return True
+
+    if str1 == "-":
+        sys.stdout.write("Invalid filename \"-\"\n")
+        return False
+
+    rc = CHECK_OUTPUT(str1)
+    if rc != None:
+        sys.stdout.write("{}: {}\n".format(str1, rc))
+        return False
+
+    sys.stdout.write("Enter message (use '.' to finish):\n")
+
+    all_lines = ""
+    eof = False
+    while not eof:
+        str = INPUT("")
+        if str == None:
+            eof = True
+        elif str.rstrip() == ".":
+            eof = True
+        else:
+            all_lines = all_lines + str + "\n"
+
+    f = OPEN_FILE(str1, WRITE_TEXT)
+    f.write(all_lines)
+    CLOSE_FILE(f)
+
+    sys.stdout.write("\n")
+    sys.stdout.write("Created file: \"{}\".\n".format(str1))
+    return False
 
 def MENU_HELP():
     CMD_HELP()
@@ -1314,9 +1435,9 @@ def MENU_QUIT():
     return True
 
 def CMD_MENU():
-    OVER = 6
-    UNDER = 7
-    BAD = 8
+    OVER = 8
+    UNDER = 9
+    BAD = 10
 
     last_error = None
     done = False
@@ -1325,23 +1446,25 @@ def CMD_MENU():
 1) Create Keys
 2) Encrypt file
 3) Decrypt file
-4) Help
-5) Quit
+4) Show File
+5) Create File
+6) Help
+7) Quit
 """)
 
         if last_error != None:
             sys.stdout.write("\n" + last_error + "\n")
             last_error = None
 
-        str = INPUT("Choose 1-5? ")
+        str = INPUT("Choose 1-7? ")
         if str == None:
-            str = "5"
+            str = "7"
         elif str.strip() == "":
             continue
 
         try:
             choice = int(str)
-            if choice > 5:
+            if choice > 7:
                 choice = OVER
             elif choice < 1:
                 choice = UNDER
@@ -1357,15 +1480,19 @@ def CMD_MENU():
         elif choice == 3:
             done = MENU_DECRYPT()
         elif choice == 4:
-            done = MENU_HELP()
+            done = MENU_SHOWFILE()
         elif choice == 5:
+            done = MENU_CREATEFILE()
+        elif choice == 6:
+            done = MENU_HELP()
+        elif choice == 7:
             done = MENU_QUIT()
         elif choice == OVER:
-            last_error = "{} is too big! Enter a number between 1 and 5.\n".format(str)
+            last_error = "{} is too big! Enter a number between 1 and 6.\n".format(str)
         elif choice == UNDER:
-            last_error = "{} is too small! Enter a number between 1 and 5.\n".format(str)
+            last_error = "{} is too small! Enter a number between 1 and 6.\n".format(str)
         elif choice == BAD:
-            last_error = "Invalid choice '{}', enter a number between 1 and 5.\n".format(str)
+            last_error = "Invalid choice '{}', enter a number between 1 and 6.\n".format(str)
 
     return True
 
