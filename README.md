@@ -174,7 +174,7 @@ C:\>
 of the more conventional '.py'?
 
 The intention of this script was to be sent over email. People I
-wanted to communicate securly with would be sent this file via email.
+wanted to communicate securely with would be sent this file via email.
 I found that my email applications made it hard to interact with
 a file that ended in the '.py' extension, for various reasons:
 
