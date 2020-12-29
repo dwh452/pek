@@ -1280,16 +1280,16 @@ def INPUT(prompt):
     return str
 
 def INPUT_WITH_DEFAULT(prompt, df):
-    if df.strip() != "":
-        prompt = prompt + " [" + df + "]: ";
+    if df != "":
+        prompt = prompt + " [" + df + "]: "
     else:
-        prompt = prompt + ": ";
+        prompt = prompt + ": "
 
     str = INPUT(prompt)
     if str == None:
         return None
     elif str == "":
-        return df.strip()
+        return df
     else:
         return str
 
@@ -1321,6 +1321,9 @@ def MENU_ENCRYPT():
     if str3 == None:
         return True
 
+    if str2 == "-":
+        sys.stdout.write("Type your message (use ^Z or ^D to signal end of file):\n")
+
     args = ["pek", "encrypt", str1, str2, str3]
     success = CMD_ENCRYPT(args)
     if success:
@@ -1346,6 +1349,9 @@ def MENU_DECRYPT():
     str3 = INPUT("Enter output file: ")
     if str3 == None:
         return True
+
+    if str2 == "-":
+        sys.stdout.write("Type your message (use ^Z or ^D to signal end of file):\n")
 
     args = ["pek", "decrypt", str1, str2, str3]
     success = CMD_DECRYPT(args)
