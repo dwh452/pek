@@ -27,7 +27,6 @@ These three components from other authors have been included into this script:
    sys.stdout
    sys.stderr
    sys.argv
-   sys.exit
    io.StringIO
    io.BytesIO
    copy(), open(), close(), read(), write()
