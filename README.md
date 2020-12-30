@@ -29,6 +29,7 @@ These three components from other authors have been included into this script:
    sys.argv
    sys.exit
    io.StringIO
+   io.BytesIO
    copy(), open(), close(), read(), write()
    input()
 ```
@@ -55,7 +56,7 @@ These three components from other authors have been included into this script:
     SET PATH=C:\Windows;C:\
     LH C:\Windows\COMMAND\MSCDEX.EXE /D:123
 
-    C:\> PEK MENU
+    C:\> PEK
     1) Create Keys
     2) Encrypt file
     3) Decrypt file

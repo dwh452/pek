@@ -27,6 +27,7 @@
 #   sys.argv
 #   sys.exit
 #   io.StringIO
+#   io.BytesIO
 #   copy(), open(), close(), read(), write()
 #   input()
 #
@@ -51,7 +52,7 @@
 #    SET PATH=C:\Windows;C:\
 #    LH C:\Windows\COMMAND\MSCDEX.EXE /D:123
 #
-#    C:\> PEK MENU
+#    C:\> PEK
 #    1) Create Keys
 #    2) Encrypt file
 #    3) Decrypt file
@@ -1020,6 +1021,18 @@ def DECRYPT(k, i, o):
 #
 ######################################################################
 
+def TRIM(str):
+    return str.strip()
+
+def RIGHT_TRIM(str):
+    return str.rstrip()
+
+def REPORT_ERROR(msg):
+    sys.stderr.write(msg + "\n")
+
+def PRINT(msg):
+    sys.stdout.write(msg)
+
 def DECODE_KEY(str):
     ss = io.StringIO(str)
     r = BASE64_READER(ss)
@@ -1032,7 +1045,8 @@ def ENCODE_KEY(key):
     w.WRITE(key)
     w.CLOSE()
     ss.seek(0)
-    result = ss.read().rstrip()
+    result = ss.read()
+    result = RIGHT_TRIM(result)
     return result
 
 def CHECK_KEY(str):
@@ -1109,23 +1123,12 @@ def OPEN_FILE(filename, mode):
 
     return open(filename, mode)
 
-def CLOSE_FILE(f):
-    if f == sys.stdin:
-        return
-    elif f == sys.stdin.buffer:
-        return
-    elif f == sys.stdout:
-        return
-    elif f == sys.stdout.buffer:
-        return
-    else:
+def CLOSE_FILE(file_name, f):
+    if file_name != "-":
         f.close()
 
-def REPORT_ERROR(msg):
-    sys.stderr.write("{}\n".format(msg))
-
 def USAGE(msg):
-    sys.stdout.write("""
+    PRINT("""
 Usage: pek create
        pek encrypt  <public-key>   <input>  <output>
        pek decrypt  <private-key>  <input>  <output>
@@ -1151,8 +1154,8 @@ def CMD_CREATE(args):
         return False
 
     keypair = CREATE()
-    sys.stdout.write("Public key:  {}\n".format( ENCODE_KEY(keypair[0]) ))
-    sys.stdout.write("Private key: {}\n".format( ENCODE_KEY(keypair[1]) ))
+    PRINT("Public key:  {}\n".format( ENCODE_KEY(keypair[0]) ))
+    PRINT("Private key: {}\n".format( ENCODE_KEY(keypair[1]) ))
     return True
 
 def CMD_ENCRYPT(args):
@@ -1189,8 +1192,8 @@ def CMD_ENCRYPT(args):
 
     rc = ENCRYPT(P, i, o)
 
-    CLOSE_FILE(i)
-    CLOSE_FILE(o)
+    CLOSE_FILE(input_file, i)
+    CLOSE_FILE(output_file, o)
 
     if rc != None:
         REPORT_ERROR("encrypt: {}".format(rc))
@@ -1228,8 +1231,8 @@ def CMD_DECRYPT(args):
 
     rc = DECRYPT(k, i, o)
 
-    CLOSE_FILE(i)
-    CLOSE_FILE(o)
+    CLOSE_FILE(input_file, i)
+    CLOSE_FILE(output_file, o)
 
     if rc != None:
         REPORT_ERROR("decrypt: {}".format(rc))
@@ -1238,10 +1241,8 @@ def CMD_DECRYPT(args):
     return True
 
 def CMD_HELP():
-
     USAGE("")
-
-    sys.stdout.write("""
+    PRINT("""
 C:\> pek create
 Public key:  BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4
 Private key: L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw
@@ -1254,12 +1255,12 @@ C:\> pek decrypt L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw f2.pek f3.txt
 
  * Encrypt files using the recipient's public key.
  * Decrypt recieved files using your private key.
- * For interactive menu: run PEK with the command line argument "menu".
- * Use ^D to signal end-of-file while typing on MacOS/Linux   press CTRL and D
- * Use ^Z to signal end-of-file while typing on Windows       press CTRL and Z
+ * For interactive menu: run PEK without any command line arguments.
+ * Use a single '.' on a line by itself to signal end-of-file when entering a message.
+ * Use ^D to signal end-of-file while typing on MacOS/Linux.   (press CTRL and D keys)
+ * Use ^Z to signal end-of-file while typing on Windows.       (press CTRL and Z keys)
 
 """.format())
-
     return True
 
 ######################################################################
@@ -1293,123 +1294,8 @@ def INPUT_WITH_DEFAULT(prompt, df):
     else:
         return str
 
-def MENU_CREATE():
-    global DPK
-    global DKK
-
-    keypair = CREATE()
-    DPK = ENCODE_KEY(keypair[0])
-    DKK = ENCODE_KEY(keypair[1])
-    sys.stdout.write("Public key:  {}\n".format(DPK))
-    sys.stdout.write("Private key: {}\n".format(DKK))
-    return False
-
-def MENU_ENCRYPT():
-    global DPK
-    global DF
-
-    sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
-    str1 = INPUT_WITH_DEFAULT("Enter public key", DPK)
-    if str1 == None:
-        return True
-
-    str2 = INPUT_WITH_DEFAULT("Enter file to encrypt", DF)
-    if str2 == None:
-        return True
-
-    str3 = INPUT("Enter output file: ")
-    if str3 == None:
-        return True
-
-    if str2 == "-":
-        sys.stdout.write("Type your message (use ^Z or ^D to signal end of file):\n")
-
-    args = ["pek", "encrypt", str1, str2, str3]
-    success = CMD_ENCRYPT(args)
-    if success:
-        sys.stdout.write("Encrypted the file \"{}\". Output written to \"{}\".\n".format(str2, str3))
-        DPK = str1
-        DF = str3
-
-    return False
-
-def MENU_DECRYPT():
-    global DKK
-    global DF
-
-    sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
-    str1 = INPUT_WITH_DEFAULT("Enter private key", DKK)
-    if str1 == None:
-        return True
-
-    str2 = INPUT_WITH_DEFAULT("Enter file to decrypt", DF)
-    if str2 == None:
-        return True
-
-    str3 = INPUT("Enter output file: ")
-    if str3 == None:
-        return True
-
-    if str2 == "-":
-        sys.stdout.write("Type your message (use ^Z or ^D to signal end of file):\n")
-
-    args = ["pek", "decrypt", str1, str2, str3]
-    success = CMD_DECRYPT(args)
-    if success:
-        sys.stdout.write("Decrypted the file \"{}\". Output written to \"{}\".\n".format(str2, str3))
-        DKK = str1
-        DF = str3
-
-    return False
-
-def MENU_SHOWFILE():
-    global DF
-
-    sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
-    str1 = INPUT_WITH_DEFAULT("Enter file to show", DF)
-    if str1 == None:
-        return True
-
-    if str1 == "-":
-        sys.stdout.write("Invalid filename \"-\"\n")
-        return False
-
-    rc = CHECK_INPUT(str1)
-    if rc != None:
-        sys.stdout.write("{}: {}\n".format(str1, rc))
-        return False
-
-    sys.stdout.write("Showing file: \"{}\".\n".format(str1))
-
-    f = OPEN_FILE(str1, READ_TEXT)
-    str = f.read()
-    CLOSE_FILE(f)
-    sys.stdout.write("--- cut here ---\n")
-    sys.stdout.write(str)
-    if str[ len(str)-1 ] != "\n":
-        sys.stdout.write("\n")
-    sys.stdout.write("--- cut here ---\n")
-    DF = str1
-    return False
-
-def MENU_CREATEFILE():
-    global DF
-
-    sys.stdout.write("Current working directory: \"{}\"\n".format(os.getcwd()))
-    str1 = INPUT("Enter file to create: ")
-    if str1 == None:
-        return True
-
-    if str1 == "-":
-        sys.stdout.write("Invalid filename \"-\"\n")
-        return False
-
-    rc = CHECK_OUTPUT(str1)
-    if rc != None:
-        sys.stdout.write("{}: {}\n".format(str1, rc))
-        return False
-
-    sys.stdout.write("Enter message (use '.' to finish):\n")
+def READ_CONSOLE():
+    PRINT("Enter message (use '.' to finish):\n")
 
     all_lines = ""
     eof = False
@@ -1417,17 +1303,195 @@ def MENU_CREATEFILE():
         str = INPUT("")
         if str == None:
             eof = True
-        elif str.rstrip() == ".":
+        elif RIGHT_TRIM(str) == ".":
             eof = True
         else:
             all_lines = all_lines + str + "\n"
 
-    f = OPEN_FILE(str1, WRITE_TEXT)
+    return all_lines
+
+def MENU_CREATE():
+    global DPK
+    global DKK
+
+    keypair = CREATE()
+    DPK = ENCODE_KEY(keypair[0])
+    DKK = ENCODE_KEY(keypair[1])
+    PRINT("Public key:  {}\n".format(DPK))
+    PRINT("Private key: {}\n".format(DKK))
+    return False
+
+def MENU_ENCRYPT():
+    global DPK
+    global DF
+
+    PRINT("Current working directory: \"{}\"\n".format(os.getcwd()))
+    public_key = INPUT_WITH_DEFAULT("Enter public key", DPK)
+    if public_key == None:
+        return True
+
+    rc = CHECK_KEY(public_key)
+    if rc != None:
+        REPORT_ERROR("Error entering public key '{}': {}.".format(public_key, rc))
+        return False
+
+    P = DECODE_KEY(public_key)
+
+    if not VALID_POINT(P):
+        REPORT_ERROR("Error entering public key '{}' is not valid.".format(public_key))
+        return False
+
+    input_file = INPUT_WITH_DEFAULT("Enter file to encrypt", DF)
+    if input_file == None:
+        return True
+
+    rc = CHECK_INPUT(input_file)
+    if rc != None:
+        REPORT_ERROR("Error entering file to encrypt '{}': {}.".format(input_file, rc))
+        return False
+
+    output_file = INPUT("Enter output file: ")
+    if output_file == None:
+        return True
+
+    rc = CHECK_OUTPUT(output_file)
+    if rc != None:
+        REPORT_ERROR("Error entering output file '{}': {}.".format(output_file, rc))
+        return False
+
+    if input_file == "-":
+        all_lines = READ_CONSOLE()
+        i = io.BytesIO(bytes(all_lines, 'utf-8'))
+    else:
+        i = OPEN_FILE(input_file, READ_BINARY)
+
+    o = OPEN_FILE(output_file, WRITE_TEXT)
+
+    rc = ENCRYPT(P, i, o)
+
+    CLOSE_FILE(input_file, i)
+    CLOSE_FILE(output_file, o)
+
+    if rc == None:
+        PRINT("Encrypted the file \"{}\". Output written to \"{}\".\n".format(input_file, output_file))
+        DPK = public_key
+        DF = output_file
+    else:
+        REPORT_ERROR("Error encrypting file '{}': {}.".format(input_file, rc))
+
+    return False
+
+def MENU_DECRYPT():
+    global DKK
+    global DF
+
+    PRINT("Current working directory: \"{}\"\n".format(os.getcwd()))
+    private_key = INPUT_WITH_DEFAULT("Enter private key", DKK)
+    if private_key == None:
+        return True
+
+    rc = CHECK_KEY(private_key)
+    if rc != None:
+        REPORT_ERROR("Error entering private key '{}' {}.".format(private_key, rc))
+        return False
+
+    input_file = INPUT_WITH_DEFAULT("Enter file to decrypt", DF)
+    if input_file == None:
+        return True
+
+    rc = CHECK_INPUT(input_file)
+    if rc != None:
+        REPORT_ERROR("Error entering file to decrypt '{}' {}.".format(input_file, rc))
+        return False
+
+    output_file = INPUT("Enter output file: ")
+    if output_file == None:
+        return True
+
+    rc = CHECK_OUTPUT(output_file)
+    if rc != None:
+        REPORT_ERROR("Error entering output file '{}' {}.".format(output_file, rc))
+        return False
+
+    k = DECODE_KEY(private_key)
+
+    if input_file == "-":
+        all_lines = READ_CONSOLE()
+        i = io.StringIO(all_lines)
+    else:
+        i = OPEN_FILE(input_file, READ_TEXT)
+
+    o = OPEN_FILE(output_file, WRITE_BINARY)
+
+    rc = DECRYPT(k, i, o)
+
+    CLOSE_FILE(input_file, i)
+    CLOSE_FILE(output_file, o)
+
+    if rc == None:
+        PRINT("Decrypted the file \"{}\". Output written to \"{}\".\n".format(input_file, output_file))
+        DKK = private_key
+        DF = output_file
+    else:
+        REPORT_ERROR("Error decrypting file '{}': {}.".format(input_file, rc))
+
+    return False
+
+def MENU_SHOWFILE():
+    global DF
+
+    PRINT("Current working directory: \"{}\"\n".format(os.getcwd()))
+    input_file = INPUT_WITH_DEFAULT("Enter file to show", DF)
+    if input_file == None:
+        return True
+
+    if input_file == "-":
+        PRINT("Invalid filename \"-\"\n")
+        return False
+
+    rc = CHECK_INPUT(input_file)
+    if rc != None:
+        PRINT("{}: {}\n".format(input_file, rc))
+        return False
+
+    PRINT("Showing file: \"{}\".\n".format(input_file))
+
+    f = OPEN_FILE(input_file, READ_TEXT)
+    str = f.read()
+    CLOSE_FILE(input_file, f)
+    PRINT("--- cut here ---\n")
+    PRINT(str)
+    if str[ len(str)-1 ] != "\n":
+        PRINT("\n")
+    PRINT("--- cut here ---\n")
+    DF = input_file
+    return False
+
+def MENU_CREATEFILE():
+    global DF
+
+    PRINT("Current working directory: \"{}\"\n".format(os.getcwd()))
+    input_file = INPUT("Enter file to create: ")
+    if input_file == None:
+        return True
+
+    if input_file == "-":
+        PRINT("Invalid filename \"-\"\n")
+        return False
+
+    rc = CHECK_OUTPUT(input_file)
+    if rc != None:
+        PRINT("{}: {}\n".format(input_file, rc))
+        return False
+
+    all_lines = READ_CONSOLE()
+
+    f = OPEN_FILE(input_file, WRITE_TEXT)
     f.write(all_lines)
-    CLOSE_FILE(f)
-    sys.stdout.write("\n")
-    sys.stdout.write("Created file: \"{}\".\n".format(str1))
-    DF = str1
+    CLOSE_FILE(input_file, f)
+    PRINT("\n")
+    PRINT("Created file: \"{}\".\n".format(input_file))
+    DF = input_file
     return False
 
 def MENU_HELP():
@@ -1437,7 +1501,7 @@ def MENU_HELP():
 def MENU_QUIT():
     return True
 
-def CMD_MENU():
+def MENU():
     OVER = 8
     UNDER = 9
     BAD = 10
@@ -1445,7 +1509,7 @@ def CMD_MENU():
     last_error = None
     done = False
     while not done:
-        sys.stdout.write("""
+        PRINT("""
 1) Create Keys
 2) Encrypt file
 3) Decrypt file
@@ -1456,13 +1520,13 @@ def CMD_MENU():
 """)
 
         if last_error != None:
-            sys.stdout.write("\n" + last_error + "\n")
+            PRINT("\n" + last_error + "\n")
             last_error = None
 
         str = INPUT("Choose 1-7? ")
         if str == None:
             str = "7"
-        elif str.strip() == "":
+        elif TRIM(str) == "":
             continue
 
         try:
@@ -1474,7 +1538,7 @@ def CMD_MENU():
         except:
             choice = BAD
 
-        sys.stdout.write("\n")
+        PRINT("\n")
 
         if choice == 1:
             done = MENU_CREATE()
@@ -1507,24 +1571,23 @@ def CMD_MENU():
 
 def MAIN():
     if len(sys.argv) <= 1:
-        USAGE("not enough arguments")
-        sys.exit(1)
-
-    command = sys.argv[1]
-
-    if command == "create":
-        success = CMD_CREATE(sys.argv)
-    elif command == "encrypt":
-        success = CMD_ENCRYPT(sys.argv)
-    elif command == "decrypt":
-        success = CMD_DECRYPT(sys.argv)
-    elif command == "help":
-        success = CMD_HELP()
-    elif command == "menu":
-        success = CMD_MENU()
+        success = MENU()
     else:
-        USAGE( "Unknown command '{}'.".format(command) )
-        success = False
+        command = sys.argv[1]
+
+        if command == "create":
+            success = CMD_CREATE(sys.argv)
+        elif command == "encrypt":
+            success = CMD_ENCRYPT(sys.argv)
+        elif command == "decrypt":
+            success = CMD_DECRYPT(sys.argv)
+        elif command == "help":
+            success = CMD_HELP()
+        elif command == "menu":
+            success = MENU()
+        else:
+            USAGE( "Unknown command '{}'.".format(command) )
+            success = False
 
     return 0 if success else 1
 
