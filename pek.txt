@@ -1256,6 +1256,8 @@ C:\> pek decrypt L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw f2.pek f3.txt
  * Encrypt files using the recipient's public key.
  * Decrypt recieved files using your private key.
  * For interactive menu: run PEK without any command line arguments.
+ * Use "-" for the input file to read from the keyboard.
+ * Use "-" for the output file to write to the screen.
  * Use a single '.' on a line by itself to signal end-of-file when entering a message.
  * Use ^D to signal end-of-file while typing on MacOS/Linux.   (press CTRL and D keys)
  * Use ^Z to signal end-of-file while typing on Windows.       (press CTRL and Z keys)

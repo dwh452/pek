@@ -100,6 +100,20 @@ else
 	echo '7 success (only valid if 5 and 6 were also successful)'
 fi
 
+######################################################################
+######################################################################@
+
+#
+# This tests piping
+#
+cat MSG.pek | ./pek encrypt  dsOK/kix6hfWdj66XsSJ0HH0TdRTQUzkmkO/51SSEc4 - - | ./pek decrypt FlgwL7sISeNP3dPJBKy3sPXNEPTnvcE65A1oPBVhQTw - - | grep -q 'Encrypted with public key'
+
+if [ $? -eq 0 ]; then
+	echo 8 success
+else
+	echo 8 fail
+fi
+
 /bin/rm $T1
 /bin/rm $T2
 /bin/rm $T3
