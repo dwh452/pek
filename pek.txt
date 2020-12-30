@@ -1131,8 +1131,8 @@ def USAGE(msg):
 Usage: pek create
        pek encrypt  <public-key>   <input>  <output>
        pek decrypt  <private-key>  <input>  <output>
-       pek menu
        pek help
+       pek            Interactive Menu!!!
 
        <public-key>   this is a public key obtained from calling "pek create"
        <private-key>  this is a private key obtained from calling "pek create"
@@ -1249,7 +1249,6 @@ C:\> pek decrypt L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw f2.pek f3.txt
 
  * Encrypt files using the recipient's public key.
  * Decrypt recieved files using your private key.
- * For interactive menu: run PEK without any command line arguments.
  * Use "-" for the input file to read from the keyboard.
  * Use "-" for the output file to write to the screen.
  * Use a single '.' on a line by itself to signal end-of-file when entering a message.
@@ -1576,8 +1575,6 @@ def MAIN():
             CMD_DECRYPT(sys.argv)
         elif command == "help":
             CMD_HELP()
-        elif command == "menu":
-            MENU()
         else:
             USAGE( "Unknown command '{}'.".format(command) )
 

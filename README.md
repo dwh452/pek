@@ -73,8 +73,8 @@ These three components from other authors have been included into this script:
 Usage: pek create
        pek encrypt  <public-key>   <input>  <output>
        pek decrypt  <private-key>  <input>  <output>
-       pek menu
        pek help
+       pek            Interactive Menu!!!
 
        <public-key>   this is a public key obtained from calling "pek create"
        <private-key>  this is a private key obtained from calling "pek create"
