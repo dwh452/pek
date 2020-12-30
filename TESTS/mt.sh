@@ -1,8 +1,10 @@
 #!/bin/sh
 #
 # Each test pipes a series of commands into the pek menu.
-# The output is captures in temp file RESULTS.txt.
-# This file is grep'd for patterns to check for success or fail.
+# The output is captured in the temp file RESULTS.txt.
+# This file is searched for patterns to check for success or fail.
+#
+# This exercises the interactive menu and all the error code paths.
 #
 
 echo Menu Testing BEGIN.
@@ -501,7 +503,7 @@ fi
 
 ######################################################################
 rm MT1.txt
-#rm RESULTS.txt
+rm RESULTS.txt
 
 date
 echo Menu Testing END.
