@@ -25,7 +25,6 @@
 #   sys.stdout
 #   sys.stderr
 #   sys.argv
-#   sys.exit
 #   io.StringIO
 #   io.BytesIO
 #   copy(), open(), close(), read(), write()
@@ -1151,17 +1150,16 @@ Usage: pek create
 def CMD_CREATE(args):
     if len(args) != 2:
         USAGE("too many arguments for 'create'")
-        return False
+        return
 
     keypair = CREATE()
     PRINT("Public key:  {}\n".format( ENCODE_KEY(keypair[0]) ))
     PRINT("Private key: {}\n".format( ENCODE_KEY(keypair[1]) ))
-    return True
 
 def CMD_ENCRYPT(args):
     if len(args) != 5:
         USAGE("incorrect number of arguments")
-        return False
+        return
 
     public_key = args[2]
     input_file = args[3]
@@ -1170,17 +1168,17 @@ def CMD_ENCRYPT(args):
     rc = CHECK_KEY(public_key)
     if rc != None:
         USAGE("{}: <public-key> argument {}".format(public_key, rc))
-        return False
+        return
 
     rc = CHECK_INPUT(input_file)
     if rc != None:
         USAGE("{}: {}".format(input_file, rc))
-        return False
+        return
 
     rc = CHECK_OUTPUT(output_file)
     if rc != None:
         USAGE("{}: {}".format(output_file, rc))
-        return False
+        return
 
     i = OPEN_FILE(input_file, READ_BINARY)
     o = OPEN_FILE(output_file, WRITE_TEXT)
@@ -1188,7 +1186,7 @@ def CMD_ENCRYPT(args):
 
     if not VALID_POINT(P):
         REPORT_ERROR("encrypt: public key '{}' is not valid".format(public_key))
-        return False
+        return
 
     rc = ENCRYPT(P, i, o)
 
@@ -1197,14 +1195,12 @@ def CMD_ENCRYPT(args):
 
     if rc != None:
         REPORT_ERROR("encrypt: {}".format(rc))
-        return False
-
-    return True
+        return
 
 def CMD_DECRYPT(args):
     if len(args) != 5:
         USAGE("incorrect number of arguments")
-        return False
+        return
 
     private_key = args[2]
     input_file = args[3]
@@ -1213,17 +1209,17 @@ def CMD_DECRYPT(args):
     rc = CHECK_KEY(private_key)
     if rc != None:
         USAGE("{}: <private-key> argument {}".format(private_key, rc))
-        return False
+        return
 
     rc = CHECK_INPUT(input_file)
     if rc != None:
         USAGE("{}: {}".format(input_file, rc))
-        return False
+        return
 
     rc = CHECK_OUTPUT(output_file)
     if rc != None:
         USAGE("{}: {}".format(output_file, rc))
-        return False
+        return
 
     k = DECODE_KEY(private_key)
     i = OPEN_FILE(input_file, READ_TEXT)
@@ -1236,9 +1232,7 @@ def CMD_DECRYPT(args):
 
     if rc != None:
         REPORT_ERROR("decrypt: {}".format(rc))
-        return False
-
-    return True
+        return
 
 def CMD_HELP():
     USAGE("")
@@ -1263,7 +1257,6 @@ C:\> pek decrypt L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw f2.pek f3.txt
  * Use ^Z to signal end-of-file while typing on Windows.       (press CTRL and Z keys)
 
 """.format())
-    return True
 
 ######################################################################
 #
@@ -1563,8 +1556,6 @@ def MENU():
         elif choice == BAD:
             last_error = "Invalid choice '{}', enter a number between 1 and 7.\n".format(str)
 
-    return True
-
 ######################################################################
 #
 # Section 7: MAIN()
@@ -1573,24 +1564,21 @@ def MENU():
 
 def MAIN():
     if len(sys.argv) <= 1:
-        success = MENU()
+        MENU()
     else:
         command = sys.argv[1]
 
         if command == "create":
-            success = CMD_CREATE(sys.argv)
+            CMD_CREATE(sys.argv)
         elif command == "encrypt":
-            success = CMD_ENCRYPT(sys.argv)
+            CMD_ENCRYPT(sys.argv)
         elif command == "decrypt":
-            success = CMD_DECRYPT(sys.argv)
+            CMD_DECRYPT(sys.argv)
         elif command == "help":
-            success = CMD_HELP()
+            CMD_HELP()
         elif command == "menu":
-            success = MENU()
+            MENU()
         else:
             USAGE( "Unknown command '{}'.".format(command) )
-            success = False
-
-    return 0 if success else 1
 
 MAIN()
