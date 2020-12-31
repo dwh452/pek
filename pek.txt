@@ -1440,12 +1440,12 @@ def MENU_SHOWFILE():
         return True
 
     if input_file == "-":
-        PRINT("Invalid filename \"-\"\n")
+        REPORT_ERROR("Invalid filename \"-\"")
         return False
 
     rc = CHECK_INPUT(input_file)
     if rc != None:
-        PRINT("{}: {}\n".format(input_file, rc))
+        REPORT_ERROR("{}: {}".format(input_file, rc))
         return False
 
     PRINT("Showing file: \"{}\".\n".format(input_file))
@@ -1470,12 +1470,12 @@ def MENU_CREATEFILE():
         return True
 
     if input_file == "-":
-        PRINT("Invalid filename \"-\"\n")
+        REPORT_ERROR("Invalid filename \"-\"")
         return False
 
     rc = CHECK_OUTPUT(input_file)
     if rc != None:
-        PRINT("{}: {}\n".format(input_file, rc))
+        REPORT_ERROR("{}: {}".format(input_file, rc))
         return False
 
     all_lines = READ_CONSOLE()

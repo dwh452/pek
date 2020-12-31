@@ -14,7 +14,7 @@ date
 T='Test 1: successful create/encrypt/decrypt'
 ######################################################################
 
-./pek <<_EOF_ > RESULTS.txt
+./pek <<_EOF_ > RESULTS.txt 2>&1
 1
 2
 
@@ -40,7 +40,7 @@ fi
 T='Test 2: Help'
 ######################################################################
 
-./pek <<_EOF_ > RESULTS.txt
+./pek <<_EOF_ > RESULTS.txt 2>&1
 6
 7
 _EOF_
@@ -56,7 +56,7 @@ fi
 T='Test 3: Show File'
 ######################################################################
 
-./pek <<_EOF_ > RESULTS.txt
+./pek <<_EOF_ > RESULTS.txt 2>&1
 4
 MSG.pek
 _EOF_
@@ -72,7 +72,7 @@ fi
 T='Test 4: Show File - Bad Filename'
 ######################################################################
 
-./pek <<_EOF_ > RESULTS.txt
+./pek <<_EOF_ > RESULTS.txt 2>&1
 4
 XMSGX.pek
 _EOF_
@@ -88,7 +88,7 @@ fi
 T='Test 5: Show File - stdin filename'
 ######################################################################
 
-./pek <<_EOF_ > RESULTS.txt
+./pek <<_EOF_ > RESULTS.txt 2>&1
 4
 -
 _EOF_
@@ -104,7 +104,7 @@ fi
 T='Test 6: Create File'
 ######################################################################
 
-./pek <<_EOF_ > RESULTS.txt
+./pek <<_EOF_ > RESULTS.txt 2>&1
 5
 MT1.txt
 i am the internet
@@ -125,7 +125,7 @@ fi
 T='Test 7: Create File - Bad Filename'
 ######################################################################
 
-./pek <<_EOF_ > RESULTS.txt
+./pek <<_EOF_ > RESULTS.txt 2>&1
 5
 /bogus/file
 7
@@ -142,7 +142,7 @@ fi
 T='Test 8: Create File - stdin Filename'
 ######################################################################
 
-./pek <<_EOF_ > RESULTS.txt
+./pek <<_EOF_ > RESULTS.txt 2>&1
 5
 -
 7
@@ -159,7 +159,7 @@ fi
 T='Test 9: menu UNDER'
 ######################################################################
 
-./pek <<_EOF_ > RESULTS.txt
+./pek <<_EOF_ > RESULTS.txt 2>&1
 0
 _EOF_
 
@@ -174,7 +174,7 @@ fi
 T='Test 10: menu OVER'
 ######################################################################
 
-./pek <<_EOF_ > RESULTS.txt
+./pek <<_EOF_ > RESULTS.txt 2>&1
 8
 _EOF_
 
@@ -189,7 +189,7 @@ fi
 T='Test 11: menu BAD'
 ######################################################################
 
-./pek <<_EOF_ > RESULTS.txt
+./pek <<_EOF_ > RESULTS.txt 2>&1
 XXX
 _EOF_
 
@@ -204,7 +204,7 @@ fi
 T='Test 12: Create Keys'
 ######################################################################
 
-./pek <<_EOF_ > RESULTS.txt
+./pek <<_EOF_ > RESULTS.txt 2>&1
 1
 7
 _EOF_
@@ -220,7 +220,7 @@ fi
 T='Test 13: Show File - filename default is used'
 ######################################################################
 
-./pek <<_EOF_ > RESULTS.txt
+./pek <<_EOF_ > RESULTS.txt 2>&1
 5
 MT1.txt
 GrandTime100
