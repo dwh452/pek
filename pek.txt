@@ -1638,7 +1638,75 @@ def CMD_SIGN(args):
     CLOSE_FILE(sig_output, o)
 
 def CMD_VERIFY(args):
-    pass
+    if len(args) != 5:
+        USAGE("incorrect number of arguments")
+        return
+
+    public_key = args[2]
+    input_file = args[3]
+    sig_input = args[4]
+
+    rc = CHECK_PUBLIC_KEY(public_key)
+    if rc != None:
+        USAGE("{}: <public-key> argument {}".format(public_key, rc))
+        return
+
+    Q = DECODE_KEY(public_key)
+
+    if not VALID_CURVE_X(Q[0]):
+        USAGE("{}: <public-key> argument is not valid".format(public_key))
+        return
+
+    if IS_HASHCODE(input_file):
+        e = DECODE_HASHCODE(input_file)
+    else:
+        rc = CHECK_INPUT(input_file)
+        if rc != None:
+            USAGE("{}: {}".format(input_file, rc))
+            return False
+
+        if input_file == "-":
+            all_lines = READ_CONSOLE()
+            i = io.BytesIO(bytes(all_lines, 'utf-8'))
+        else:
+            i = OPEN_FILE(input_file, READ_BINARY)
+
+        e = SHA256(i)
+        CLOSE_FILE(input_file, i)
+
+    rc = CHECK_INPUT(sig_input)
+    if rc != None:
+        USAGE("{}: {}".format(sig_input, rc))
+        return False
+
+    i = OPEN_FILE(sig_input, READ_TEXT)
+
+    rdr = BASE64_READER(i)
+    r = rdr.READ(32)
+    if len(r) != 32:
+        USAGE("{}: error reading signature. unable to read r. len(32) != len({})".format(sig_input, len(r)))
+        return False
+
+    s = rdr.READ(32)
+    if len(s) != 32:
+        USAGE("{}: error reading signature. unable to read s. len(32) != len({})".format(sig_input, len(s)))
+        return False
+
+    if not rdr.EOF():
+        USAGE("{}: error reading signature. data stream too long".format(sig_input))
+        return False
+
+    CLOSE_FILE(sig_input, i)
+
+    r = BYTES_TO_INT(r)
+    s = BYTES_TO_INT(s)
+
+    good = VERIFY(Q, e, (r, s) )
+
+    if good:
+        PRINT("GOOD\n")
+    else:
+        PRINT("BAD\n")
 
 def CMD_HELP():
     USAGE("")
