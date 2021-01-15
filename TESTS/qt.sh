@@ -30,8 +30,8 @@ fi
 echo 'The next command will generate an error message. That is expected. If no error message appears, then something is broken:'
 echo 'dwh Not Gonna Take It Anymore' | ./pek encrypt $PRIVTE_KEY - - | ./pek decrypt $PUBLIC_KEY - - | grep -q 'dwh Not Gonna Take It Anymore'
 
-PUBLIC_KEY=ijfnFLm20UQCjP1ok2qSB94umDJfPgkzbznX5roviPs
-PRIVATE_KEY=3NCfWCnME/Os+A62hNfSf5ZerhdaK+GMW3krTRLuSGM
+PUBLIC_KEY=Pvf2ZHZWoLa1uVn12JxmFpl+SjKKrv39xVoHClXxRer
+PRIVATE_KEY=Tr9+E2bmaWPQm8Q9/uOzV7STWwAsZBkbaNepQFeRnrF
 
 echo 'dwh Not Gonna Take It Anymore' | ./pek encrypt $PUBLIC_KEY - - | ./pek decrypt $PRIVATE_KEY - - | grep -q 'dwh Not Gonna Take It Anymore'
 
@@ -102,17 +102,6 @@ fi
 
 ######################################################################
 ######################################################################@
-
-#
-# This tests piping
-#
-cat MSG.pek | ./pek encrypt  dsOK/kix6hfWdj66XsSJ0HH0TdRTQUzkmkO/51SSEc4 - - | ./pek decrypt FlgwL7sISeNP3dPJBKy3sPXNEPTnvcE65A1oPBVhQTw - - | grep -q 'Encrypted with public key'
-
-if [ $? -eq 0 ]; then
-	echo 8 success
-else
-	echo 8 fail
-fi
 
 /bin/rm $T1
 /bin/rm $T2

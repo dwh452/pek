@@ -3,6 +3,7 @@
 ######################################################################
 #
 # pek is a command to encrypt and decrypt files using public/private keys.
+# As a secondary feature pek can also generate digital signatures.
 # Written for python3.
 #
 # This program has been designed to be an easy-to-install and simple-to-use tool
@@ -10,25 +11,6 @@
 # be cut and pasted from a terminal window into an email message. This program was designed
 # to be given to someone with minimal technical skills, such that they have a reasonable
 # chance of getting its dependencies installed and running. I.e. communicating with your parents/siblings.
-#
-# This program contains code from these other projects:
-#   Elliptic Curve   Jimmy Song, https://github.com/jimmysong/programmingbitcoin.git
-#   AES              Brandon Sterne, https://gist.github.com/raullenchai/2920069
-#   bytes_to_int     brunsgaard, https://stackoverflow.com/questions/34009653/convert-bytes-to-int
-#
-# Dependencies:
-#   os.urandom
-#   os.path.isfile
-#   os.path.exists
-#   os.getcwd
-#   sys.stdin
-#   sys.stdout
-#   sys.stderr
-#   sys.argv
-#   io.StringIO
-#   io.BytesIO
-#   copy(), open(), close(), read(), write()
-#   input()
 #
 # Synopsis:
 #    C:\> PEK CREATE
@@ -55,17 +37,18 @@
 #    1) Create Keys
 #    2) Encrypt file
 #    3) Decrypt file
-#    4) Show File
-#    5) Create File
-#    6) Help
-#    7) Quit
-#    Choose 1-7? 7
+#    4) Create Signature
+#    5) Verify Signature
+#    6) File Operations
+#    7) Help
+#    8) Quit
+#    Choose 1-8? 8
 #
 #    C:\> 
 #
-# About:
-# The private key is a random 256-bit value (represented by the variable 'k').
-# The public key is the secp256k1 generator point multiplied by the private key (represented by the variable 'P').
+# Encryption / Decryption:
+# The private key is a random 256-bit value (represented by the variable 'd').
+# The public key is the secp256k1 generator point multiplied by the private key (represented by the variable 'Q').
 #
 # The shared key (see the 'sk' variable in ENCRYPT() and DECRYPT()) is derived
 # using ECDH (Elliptic Curve Diffie-Hellman) Key Exchange. An ephemeral private/public key pair is
@@ -85,22 +68,54 @@
 # for whitespace appearing anywhere. The first 32-bytes are the the public ephemeral key.
 # The remaining data is the encrypted form of the plaintext.
 #
+# Signing / Verification:
+# The ECDSA (Elliptic Curve Digital Signature Algorithm) is used.
+# The 256-bit hash code is calculated using SHA256.
+# See the SIGN() and VERIFY() functions. The hash code is represented by the variable 'e'.
+# The signature file format is 512-bits of BASE64 characters representing the tuple (r, s).
+#
+# This program contains code from these other projects:
+#   Elliptic Curve   Jimmy Song, https://github.com/jimmysong/programmingbitcoin.git
+#   AES              Brandon Sterne, https://gist.github.com/raullenchai/2920069
+#   SHA256           Thomas Dixon, https://github.com/thomdixon/pysha2
+#
+# Dependencies:
+#   os.urandom
+#   os.path.isfile
+#   os.path.exists
+#   os.getcwd
+#   os.chdir
+#   os.listdir
+#   sys.stdin
+#   sys.stdout
+#   sys.stderr
+#   sys.argv
+#   io.StringIO
+#   io.BytesIO
+#   copy.copy
+#   copy.deepcopy
+#   struct.unpack
+#   struct.pack
+#   input(), open(), close(), read(), write()
+#
 # The code is organized as follows:
 #
 #   Section 1: Elliptic Curve
 #   Section 2: AES - Advanced Encryption Standard
-#   Section 3: BASE64 Reading & Writing
-#   Section 4: CREATE, ENCRYPT, DECRYPT implementations
-#   Section 5: Command Line Processing
-#   Section 6: Interactive Menu
-#   Section 7: MAIN()
+#   Section 3: SHA256 - Secure Hash Algorithm
+#   Section 4: BASE64 Reading & Writing
+#   Section 5: CREATE, ENCRYPT, DECRYPT, SIGN, VERIFY
+#   Section 6: Command Line Processing
+#   Section 7: Interactive Menu
+#   Section 8: MAIN()
 #
 ######################################################################
 
 import sys
 import os
 import io
-from copy import copy
+import copy
+import struct
 
 ######################################################################
 #
@@ -519,7 +534,7 @@ def galoisMult(a, b):
 
 # mixColumn takes a column and does stuff
 def mixColumn(column):
-    temp = copy(column)
+    temp = copy.copy(column)
     column[0] = galoisMult(temp[0],2) ^ galoisMult(temp[3],1) ^ \
                 galoisMult(temp[2],1) ^ galoisMult(temp[1],3)
     column[1] = galoisMult(temp[1],2) ^ galoisMult(temp[0],1) ^ \
@@ -531,7 +546,7 @@ def mixColumn(column):
 
 # mixColumnInv does stuff too
 def mixColumnInv(column):
-    temp = copy(column)
+    temp = copy.copy(column)
     column[0] = galoisMult(temp[0],14) ^ galoisMult(temp[3],9) ^ \
                 galoisMult(temp[2],13) ^ galoisMult(temp[1],11)
     column[1] = galoisMult(temp[1],14) ^ galoisMult(temp[0],9) ^ \
@@ -641,21 +656,139 @@ def aesMainInv(state, expandedKey, numRounds=14):
     
 # aesEncrypt - encrypt a single block of plaintext
 def aesEncrypt(plaintext, key):
-    block = copy(plaintext)
+    block = copy.copy(plaintext)
     expandedKey = expandKey(key)
     aesMain(block, expandedKey)
     return block
 
 # aesDecrypt - decrypte a single block of ciphertext
 def aesDecrypt(ciphertext, key):
-    block = copy(ciphertext)
+    block = copy.copy(ciphertext)
     expandedKey = expandKey(key)
     aesMainInv(block, expandedKey)
     return block
 
 ######################################################################
 #
-# Section 3: BASE64 Reading & Writing
+# Section 3: SHA256 - Secure Hash Algorithm
+#
+######################################################################
+
+#!/usr/bin/python
+# __author__ = 'Thomas Dixon'
+# __license__ = 'MIT'
+
+# import copy
+# import struct
+# import sys
+
+
+# def new(m=None):
+#     return sha256(m)
+
+class sha256(object):
+    _k = (0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
+          0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+          0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
+          0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+          0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
+          0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+          0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+          0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+          0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
+          0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+          0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
+          0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+          0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
+          0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+          0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+          0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2)
+    _h = (0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+          0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19)
+    _output_size = 8
+    
+    blocksize = 1
+    block_size = 64
+    digest_size = 32
+    
+    def __init__(self, m=None):        
+        self._buffer = bytearray()
+        self._counter = 0
+        
+        if m is not None:
+            if type(m) is not bytes:
+                raise TypeError('%s() argument 1 must be string, not %s' % (self.__class__.__name__, type(m).__name__))
+            self.update(m)
+        
+    def _rotr(self, x, y):
+        return ((x >> y) | (x << (32-y))) & 0xFFFFFFFF
+                    
+    def _sha256_process(self, c):
+        w = [0]*64
+        w[0:16] = struct.unpack('!16L', c)
+        
+        for i in range(16, 64):
+            s0 = self._rotr(w[i-15], 7) ^ self._rotr(w[i-15], 18) ^ (w[i-15] >> 3)
+            s1 = self._rotr(w[i-2], 17) ^ self._rotr(w[i-2], 19) ^ (w[i-2] >> 10)
+            w[i] = (w[i-16] + s0 + w[i-7] + s1) & 0xFFFFFFFF
+        
+        a,b,c,d,e,f,g,h = self._h
+        
+        for i in range(64):
+            s0 = self._rotr(a, 2) ^ self._rotr(a, 13) ^ self._rotr(a, 22)
+            maj = (a & b) ^ (a & c) ^ (b & c)
+            t2 = s0 + maj
+            s1 = self._rotr(e, 6) ^ self._rotr(e, 11) ^ self._rotr(e, 25)
+            ch = (e & f) ^ ((~e) & g)
+            t1 = h + s1 + ch + self._k[i] + w[i]
+            
+            h = g
+            g = f
+            f = e
+            e = (d + t1) & 0xFFFFFFFF
+            d = c
+            c = b
+            b = a
+            a = (t1 + t2) & 0xFFFFFFFF
+            
+        self._h = [(x+y) & 0xFFFFFFFF for x,y in zip(self._h, [a,b,c,d,e,f,g,h])]
+        
+    def update(self, m):
+        if not m:
+            return
+        if type(m) is not bytes:
+            raise TypeError('%s() argument 1 must be string, not %s' % (sys._getframe().f_code.co_name, type(m).__name__))
+        
+        self._buffer += m
+        self._counter += len(m)
+        
+        while len(self._buffer) >= 64:
+            self._sha256_process(self._buffer[:64])
+            self._buffer = self._buffer[64:]
+            
+    def digest(self):
+        mdi = self._counter & 0x3F
+        length = struct.pack('!Q', self._counter<<3)
+        
+        if mdi < 56:
+            padlen = 55-mdi
+        else:
+            padlen = 119-mdi
+        
+        r = self.copy()
+        r.update(b'\x80'+(b'\x00'*padlen)+length)
+        return b''.join([struct.pack('!L', i) for i in r._h[:self._output_size]])
+        
+#    def hexdigest(self):
+#        return self.digest()
+        
+    def copy(self):
+        return copy.deepcopy(self)
+
+
+######################################################################
+#
+# Section 4: BASE64 Reading & Writing
 #
 ######################################################################
 
@@ -726,6 +859,11 @@ class BASE64_READER:
             else:
                 return True
 
+    def GET_REMAINDER(self):
+        b = 7 - self.BIT_OFFSET(self.cb)
+        v = self.current_byte >> self.BIT_OFFSET(self.cb)+1
+        return (b, v)
+
     def READ(self, n):
         result = bytearray()
         done = False
@@ -790,11 +928,12 @@ class BASE64_READER:
         self.current_byte = current_byte
 
 class BASE64_WRITER:
-    def __init__(self, o):
+    def __init__(self, o, remainder=0):
         self.o = o          # should be opened using mode WRITE_TEXT
         self.b6_len = 0
         self.b6 = 0
         self.col = 0
+        self.remainder = remainder
 
     def ENCODE_B6(self, b6):
         if b6 >= 0 and b6 <= 25:
@@ -866,7 +1005,8 @@ class BASE64_WRITER:
 
     def CLOSE(self):
         if self.b6_len > 0:
-            self.o.write( self.ENCODE_B6(self.b6) )
+            b = self.ENCODE_B6( self.b6 | self.remainder )
+            self.o.write( b )
         self.o.write("\n")
 
 def IS_BASE64_CHAR(ch):
@@ -885,9 +1025,22 @@ def IS_BASE64_CHAR(ch):
 
 ######################################################################
 #
-# Section 4: CREATE, ENCRYPT, DECRYPT implementations
+# Section 5: CREATE, ENCRYPT, DECRYPT, SIGN, VERIFY
 #
 ######################################################################
+
+# Data Types Explained:
+#
+#   key         is a 2-tuple        (int, int)      (key_type, data)
+#   keypair     is a 2-tuple        (key, key)
+#   point       is a class          class S256Point
+#   signature   is a 2-tuple        (int, int)      (r, s)
+#
+
+InvalidKey      = 0x00
+PrivateKey      = 0x01
+PublicKeyEvenY  = 0x02      # Public Key Where the Y coordinate is Even
+PublicKeyOddY   = 0x03      # Public Key Where the Y coordinate is Odd
 
 def PAD(block, n):
     if len(block) < n:
@@ -905,56 +1058,92 @@ def XOR(mask, data):
     for i in range(len(data)):
         data[i] = data[i] ^ mask[i]
 
-def RANDOM256():
-    return bytearray(os.urandom(32))
-
-#
-# [brunsgaard] https://stackoverflow.com/questions/34009653/convert-bytes-to-int
-#
 def INT_TO_BYTES(value, length):
-    result = bytearray()
-    for i in range(0, length):
-        result.append(value >> (i * 8) & 0xff)
-    result.reverse()
-    return result
+    return bytearray( value.to_bytes(length, 'big') )
 
 def BYTES_TO_INT(bytes):
-    result = 0
-    for b in bytes:
-        result = result * 256 + int(b)
-    return result
+    return int.from_bytes(bytes, 'big')
 
-Gx = INT_TO_BYTES(G.x.num, 32)         # x-coordinate of generator point G
-
-def VALID_POINT(P):
-    x = BYTES_TO_INT(P)
-
+def VALID_CURVE_X(x):
     #
     # solve for y:  y^2 = x^3 + a * x + b
     #
-    ysquared = S256Field(x)**3 + S256Field(A) * S256Field(x) + S256Field(B)
-    y = ysquared.sqrt()
-
     try:
-        P = S256Point(x, y.num)
+        ysquared = S256Field(x)**3 + S256Field(A) * S256Field(x) + S256Field(B)
+        y = ysquared.sqrt()
+        S256Point(x, y.num)
     except:
         return False
-
     return True
 
-def SCALE_POINT(P, s):
-    x = BYTES_TO_INT(P)
-    scalar = BYTES_TO_INT(s)
+def VALID_SCALAR(scalar):
+    return scalar >= 1 and scalar <= N-1
+
+def PUBLIC_KEY_TO_POINT(key):
+    (key_type, data) = key
+    x = data
 
     #
     # solve for y:  y^2 = x^3 + a * x + b
     #
     ysquared = S256Field(x)**3 + S256Field(A) * S256Field(x) + S256Field(B)
     y = ysquared.sqrt()
+    if ( y.num % 2 == 0 and key_type == PublicKeyEvenY
+            or y.num % 2 == 1 and key_type == PublicKeyOddY ):
+        return S256Point(x, y.num)
+    else:
+        other_y = S256Field(0) - y
+        return S256Point(x, other_y.num)
 
-    P = S256Point(x, y.num)
-    result = scalar * P
-    return INT_TO_BYTES(result.x.num, 32)
+def POINT_TO_PUBLIC_KEY(Q):
+    if Q.y.num % 2 == 0:
+        key_type = PublicKeyEvenY
+    else:
+        key_type = PublicKeyOddY
+    data = Q.x.num
+    return (key_type, data)
+
+def PRIVATE_KEY_TO_INT(d):
+    (key_type, data) = d
+    return data
+
+def INT_TO_PRIVATE_KEY(x):
+    return (PrivateKey, x)
+
+def SCALE_POINT(P, scalar):
+    return scalar * P
+
+def ADD_POINTS(A, B):
+    return A + B
+
+def POINT_TO_BYTES(P):
+    bytes = INT_TO_BYTES(P.x.num, 32)
+    if P.y.num % 2 == 0:
+        bytes = bytes + b'\x02'
+    else:
+        bytes = bytes + b'\x03'
+    return bytes
+
+def BYTES_TO_POINT(bytes):
+    if len(bytes) != 33:
+        return S256Point(None, None)
+
+    data = BYTES_TO_INT(bytes[:32])
+
+    even_flag = bytes[32:]
+    if even_flag == b'\x02':
+        key_type = PublicKeyEvenY
+    elif even_flag == b'\x03':
+        key_type = PublicKeyOddY
+    else:
+        return S256Point(None, None)
+
+    if not VALID_CURVE_X(data):
+        return S256Point(None, None)
+
+    key = (key_type, data)
+    P = PUBLIC_KEY_TO_POINT(key)
+    return P
 
 def AES_ENCRYPT(key, bytes):
     s1 = slice(0, 16)
@@ -966,17 +1155,46 @@ def AES_DECRYPT(key, bytes):
     s2 = slice(16, 32)
     return aesDecrypt(bytes[s1], key) + aesDecrypt(bytes[s2], key)
 
-def CREATE():
-    k = RANDOM256()
-    P = SCALE_POINT(Gx, k)
-    return (P, k)
+def SHA256(i):
+    s = sha256()
+    eof = False
+    while not eof:
+        bytes = i.read(256)
+        s.update(bytes)
+        if len(bytes) != 256:
+            eof = True
+    hashcode = s.digest()
+    return hashcode
 
-def ENCRYPT(P, i, o):
-    e = RANDOM256()
-    E = SCALE_POINT(Gx, e)
-    sk = SCALE_POINT(P, e)
+def RANDOM256():
+    while True:
+        bytes = os.urandom(32)
+        d = BYTES_TO_INT(bytes)
+        if d >= 1 and d <= N-1:
+            return d
+
+def HASH_POINT(P):
+    bytes = POINT_TO_BYTES(P)
+    ss = io.BytesIO(bytes)
+    return SHA256(ss)
+
+def CREATE():
+    d = RANDOM256()
+    Q = SCALE_POINT(G, d)
+
+    Q = POINT_TO_PUBLIC_KEY(Q)
+    d = INT_TO_PRIVATE_KEY(d)
+    return (Q, d)
+
+def ENCRYPT(Q, i, o):
+    Q = PUBLIC_KEY_TO_POINT(Q)
     w = BASE64_WRITER(o)
+    e = RANDOM256()
+    E = SCALE_POINT(G, e)
+    E = POINT_TO_BYTES(E)
     w.WRITE(E)
+    QE = SCALE_POINT(Q, e)
+    sk = HASH_POINT(QE)
     xor_mask = sk
     eof = False
     while not eof:
@@ -991,14 +1209,17 @@ def ENCRYPT(P, i, o):
     w.CLOSE()
     return None
 
-def DECRYPT(k, i, o):
+def DECRYPT(d, i, o):
+    d = PRIVATE_KEY_TO_INT(d)
     r = BASE64_READER(i)
-    E = r.READ(32)
-    if len(E) != 32:
-        return "decoding error. ephemeral public key len={} != 32".format(len(E))
-    if not VALID_POINT(E):
+    E = r.READ(33)
+    if len(E) != 33:
+        return "decoding error. ephemeral public key len={} != 33".format(len(E))
+    E = BYTES_TO_POINT(E)
+    if E.x.num == None:
         return "decoding error: ephemeral public key is not valid"
-    sk = SCALE_POINT(E, k)
+    ED = SCALE_POINT(E, d)
+    sk = HASH_POINT(ED)
     xor_mask = sk
     while not r.EOF():
         encrypted_bytes = r.READ(32)
@@ -1014,9 +1235,50 @@ def DECRYPT(k, i, o):
         return "error decoding base64. {}. total bad characters: {}".format(r.error_msg, r.error_cnt)
     return None
 
+def SIGN(d, e):
+    d = PRIVATE_KEY_TO_INT(d)
+    e = BYTES_TO_INT(e)
+
+    while True:
+        k = RANDOM256()
+        P = SCALE_POINT(G, k)
+        x1 = P.x.num
+        r = x1 % N
+        if r == 0:
+            continue
+        k_inv = pow(k, N-2, N)      # fermat's little theorem
+        s = k_inv * (e + d * r) % N
+        if s == 0:
+            continue
+        break
+    return (r, s)
+
+def VERIFY(Q, e, signature):
+    Q = PUBLIC_KEY_TO_POINT(Q)
+    e = BYTES_TO_INT(e)
+    (r, s) = signature
+
+    s_inv = pow(s, N-2, N)        # fermat's little theorem
+    u1 = s_inv * e % N
+    u2 = s_inv * r % N
+
+    A = SCALE_POINT(G, u1)
+    B = SCALE_POINT(Q, u2)
+    P = ADD_POINTS(A, B)
+    if P.x == None:
+        return False
+
+    x1 = P.x.num % N
+    v = x1
+
+    if v == r:
+        return True
+    else:
+        return False
+
 ######################################################################
 #
-# Section 5: Command Line Processing
+# Section 6: Command Line Processing
 #
 ######################################################################
 
@@ -1032,30 +1294,99 @@ def REPORT_ERROR(msg):
 def PRINT(msg):
     sys.stdout.write(msg)
 
+def CWD():
+    return os.getcwd()
+
+def CHDIR(dir):
+    try:
+        os.chdir(dir)
+    except:
+        return "unable to change directory"
+    return None
+
+def PRINT_CWD():
+    PRINT( "Current working directory: \"{}\"\n".format(CWD()) )
+
 def DECODE_KEY(str):
     ss = io.StringIO(str)
     r = BASE64_READER(ss)
     result = r.READ(32)
-    return result
+    (nbits, value) = r.GET_REMAINDER()
+    return (value, BYTES_TO_INT(result))
 
 def ENCODE_KEY(key):
+    (t, b) = key
     ss = io.StringIO()
-    w = BASE64_WRITER(ss)
-    w.WRITE(key)
+    w = BASE64_WRITER(ss, t)
+    b = INT_TO_BYTES(b, 32)
+    w.WRITE(b)
     w.CLOSE()
     ss.seek(0)
     result = ss.read()
     result = RIGHT_TRIM(result)
     return result
 
-def CHECK_KEY(str):
+def CHAR_TO_KEY_TYPE(ch):
+    if ch in "AQgwEUk0IYo4Mcs8":
+        return InvalidKey
+    elif ch in "BRhxFVl1JZp5Ndt9":
+        return PrivateKey
+    elif ch in "CSiyGWm2Kaq6Oeu+":
+        return PublicKeyEvenY
+    elif ch in "DTjzHXn3Lbr7Pfv/":
+        return PublicKeyOddY
+
+def CHECK_PUBLIC_KEY(str):
     if len(str) != 43:
         return "must be exactly 43 characters long, not {}".format(len(str))
 
     for i in range(0, len(str)):
         if not IS_BASE64_CHAR(str[i]):
             return "'{}' is not a base64 character".format(str[i])
+
+    last_char = str[ len(str)-1 ]
+    t = CHAR_TO_KEY_TYPE(last_char)
+
+    if t == InvalidKey:
+        return "is not a public key, (marked invalid)"
+
+    if t == PrivateKey:
+        return "is not a public key (marked private)"
+
     return None
+
+def CHECK_PRIVATE_KEY(str):
+    if len(str) != 43:
+        return "must be exactly 43 characters long, not {}".format(len(str))
+
+    for i in range(0, len(str)):
+        if not IS_BASE64_CHAR(str[i]):
+            return "'{}' is not a base64 character".format(str[i])
+
+    last_char = str[ len(str)-1 ]
+    t = CHAR_TO_KEY_TYPE(last_char)
+
+    if t == InvalidKey:
+        return "is not a private key, (marked invalid)"
+
+    if t == PublicKeyEvenY or t == PublicKeyOddY:
+        return "is not a private key (marked public)"
+
+    return None
+
+def IS_HASHCODE(str):
+    if len(str) != 64:
+        return False
+    for i in range(0, 64):
+        if str[i] not in "abcdef0123456789":
+            return False
+    return True
+
+def DECODE_HASHCODE(str):
+    return INT_TO_BYTES( int(str, 16), 32)
+
+def ENCODE_HASHCODE(hc):
+    return format( BYTES_TO_INT(hc), '064x' )
 
 def CHECK_INPUT(input_file):
     if input_file == "-":
@@ -1128,21 +1459,42 @@ def CLOSE_FILE(file_name, f):
 
 def USAGE(msg):
     PRINT("""
-Usage: pek create
-       pek encrypt  <public-key>   <input>  <output>
-       pek decrypt  <private-key>  <input>  <output>
-       pek help
-       pek            Interactive Menu!!!
+Usage:
+    pek create
+    pek encrypt  <public-key>      <input>        <output>
+    pek decrypt  <private-key>     <input>        <output>
+    pek sign     <private-key>  <file-or-hash>  <signature-out>
+    pek verify   <public-key>   <file-or-hash>  <signature-in>
+    pek help
+    pek              Interactive Menu!!!
 
-       <public-key>   this is a public key obtained from calling "pek create"
-       <private-key>  this is a private key obtained from calling "pek create"
-       <input>        this is the filename to read, use "-" to read from standard input
-       <output>       this is the filename to write, use "-" to write to standard output
+    <public-key>     This is a public key obtained from calling "pek create".
+    <private-key>    This is a private key obtained from calling "pek create".
+    <input>          This is the filename to read, use "-" to read from standard input.
+    <output>         This is the filename to write, use "-" to write to standard output.
+    <file-or-hash>   The filename to read and calculate the hash code for. Use "-" for standard input.
+                     A hash code can be given instead. This is a 64-character string consisting of hex digits.
+    <signature-out>  This is the signature filename to create, use "-" for standard output.
+    <signature-in>   This is the signature filename to read, use "-" for standard input.
 
-    Example:
-        pek create
-        pek encrypt UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 f1.txt f1.pek
-        pek decrypt lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk f1.pek original.txt
+Examples:
+    $ pek create
+    Public key:  UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4
+    Private key: lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk
+
+    $ pek encrypt UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 f1.txt f1.pek
+    $ pek decrypt lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk f1.pek original.txt
+
+    $ pek sign    lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk MANIFESTO.doc  MANIFESTO.sig
+    $ pek verify  UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 MANIFESTO.doc  MANIFESTO.sig
+    GOOD
+
+    $ shasum -a 256 MANIFESTO.doc
+    6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b
+
+    $ pek sign   lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk 6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b MANIFESTO.sig
+    $ pek verify UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b MANIFESTO.sig
+    GOOD
 
 {}
 """.format(msg))
@@ -1165,7 +1517,7 @@ def CMD_ENCRYPT(args):
     input_file = args[3]
     output_file = args[4]
 
-    rc = CHECK_KEY(public_key)
+    rc = CHECK_PUBLIC_KEY(public_key)
     if rc != None:
         USAGE("{}: <public-key> argument {}".format(public_key, rc))
         return
@@ -1182,13 +1534,13 @@ def CMD_ENCRYPT(args):
 
     i = OPEN_FILE(input_file, READ_BINARY)
     o = OPEN_FILE(output_file, WRITE_TEXT)
-    P = DECODE_KEY(public_key)
+    Q = DECODE_KEY(public_key)
 
-    if not VALID_POINT(P):
+    if not VALID_CURVE_X(Q[0]):
         REPORT_ERROR("encrypt: public key '{}' is not valid".format(public_key))
         return
 
-    rc = ENCRYPT(P, i, o)
+    rc = ENCRYPT(Q, i, o)
 
     CLOSE_FILE(input_file, i)
     CLOSE_FILE(output_file, o)
@@ -1206,7 +1558,7 @@ def CMD_DECRYPT(args):
     input_file = args[3]
     output_file = args[4]
 
-    rc = CHECK_KEY(private_key)
+    rc = CHECK_PRIVATE_KEY(private_key)
     if rc != None:
         USAGE("{}: <private-key> argument {}".format(private_key, rc))
         return
@@ -1221,11 +1573,15 @@ def CMD_DECRYPT(args):
         USAGE("{}: {}".format(output_file, rc))
         return
 
-    k = DECODE_KEY(private_key)
+    d = DECODE_KEY(private_key)
+
+    if not VALID_SCALAR(d[0]):
+        REPORT_ERROR("encrypt: private key '{}' invalid scalar".format(private_key))
+
     i = OPEN_FILE(input_file, READ_TEXT)
     o = OPEN_FILE(output_file, WRITE_BINARY)
 
-    rc = DECRYPT(k, i, o)
+    rc = DECRYPT(d, i, o)
 
     CLOSE_FILE(input_file, i)
     CLOSE_FILE(output_file, o)
@@ -1234,38 +1590,51 @@ def CMD_DECRYPT(args):
         REPORT_ERROR("decrypt: {}".format(rc))
         return
 
+def CMD_SIGN(args):
+    pass
+
+def CMD_VERIFY(args):
+    pass
+
 def CMD_HELP():
     USAGE("")
-    PRINT("""
-C:\> pek create
-Public key:  BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4
-Private key: L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw
+    PRINT("""\
+  C:\> pek create
+  Public key:  BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4
+  Private key: L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw
 
-C:\> pek encrypt BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4 f1.txt f2.pek
+  C:\> pek encrypt BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4 f1.txt f2.pek
+  C:\> pek decrypt L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw f2.pek f3.txt
+      The files f1.txt and f3.txt will be the same.
 
-C:\> pek decrypt L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw f2.pek f3.txt
+  C:\> pek sign L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw f1.txt f1.sig
+  C:\> pek verify BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4 f1.txt f1.sig
+  GOOD
+      Only the private key holder can create a good signature.
 
- The files f1.txt and f3.txt will be the same after running these commands.
-
+ * Keep your PRIVATE KEY secret.
+ * You can freely give out your PUBLIC KEY.
  * Encrypt files using the recipient's public key.
  * Decrypt recieved files using your private key.
- * Use "-" for the input file to read from the keyboard.
- * Use "-" for the output file to write to the screen.
- * Use a single '.' on a line by itself to signal end-of-file when entering a message.
+ * Create a signature using your private key.
+ * Verify a signature using the senders public key.
+ * Enter "-" for the input file to read from the keyboard.
+ * Enter "-" for the output file to write to the screen.
+ * Use a single '.' (period) on a line by itself to signal end-of-file while typing.
  * Use ^D to signal end-of-file while typing on MacOS/Linux.   (press CTRL and D keys)
  * Use ^Z to signal end-of-file while typing on Windows.       (press CTRL and Z keys)
-
 """.format())
 
 ######################################################################
 #
-# Section 6: Interactive Menu
+# Section 7: Interactive Menu
 #
 ######################################################################
 
 DPK  = ""   # Default public key (blank means not set)
 DKK  = ""   # Default private key (blank means not set)
 DF   = ""   # Default file name (blank means not set)
+DDIR = ""   # Default Directory (blank means not set)
 
 def INPUT(prompt):
     try:
@@ -1319,19 +1688,19 @@ def MENU_ENCRYPT():
     global DPK
     global DF
 
-    PRINT("Current working directory: \"{}\"\n".format(os.getcwd()))
+    PRINT_CWD()
     public_key = INPUT_WITH_DEFAULT("Enter public key", DPK)
     if public_key == None:
         return True
 
-    rc = CHECK_KEY(public_key)
+    rc = CHECK_PUBLIC_KEY(public_key)
     if rc != None:
         REPORT_ERROR("Error entering public key '{}': {}.".format(public_key, rc))
         return False
 
-    P = DECODE_KEY(public_key)
+    Q = DECODE_KEY(public_key)
 
-    if not VALID_POINT(P):
+    if not VALID_CURVE_X(Q[0]):
         REPORT_ERROR("Error entering public key '{}' is not valid.".format(public_key))
         return False
 
@@ -1361,7 +1730,7 @@ def MENU_ENCRYPT():
 
     o = OPEN_FILE(output_file, WRITE_TEXT)
 
-    rc = ENCRYPT(P, i, o)
+    rc = ENCRYPT(Q, i, o)
 
     CLOSE_FILE(input_file, i)
     CLOSE_FILE(output_file, o)
@@ -1379,15 +1748,20 @@ def MENU_DECRYPT():
     global DKK
     global DF
 
-    PRINT("Current working directory: \"{}\"\n".format(os.getcwd()))
+    PRINT_CWD()
     private_key = INPUT_WITH_DEFAULT("Enter private key", DKK)
     if private_key == None:
         return True
 
-    rc = CHECK_KEY(private_key)
+    rc = CHECK_PRIVATE_KEY(private_key)
     if rc != None:
         REPORT_ERROR("Error entering private key '{}' {}.".format(private_key, rc))
         return False
+
+    d = DECODE_KEY(private_key)
+
+    if not VALID_SCALAR(d[0]):
+        REPORT_ERROR("encrypt: private key '{}' invalid scalar".format(private_key))
 
     input_file = INPUT_WITH_DEFAULT("Enter file to decrypt", DF)
     if input_file == None:
@@ -1407,8 +1781,6 @@ def MENU_DECRYPT():
         REPORT_ERROR("Error entering output file '{}' {}.".format(output_file, rc))
         return False
 
-    k = DECODE_KEY(private_key)
-
     if input_file == "-":
         all_lines = READ_CONSOLE()
         i = io.StringIO(all_lines)
@@ -1417,7 +1789,7 @@ def MENU_DECRYPT():
 
     o = OPEN_FILE(output_file, WRITE_BINARY)
 
-    rc = DECRYPT(k, i, o)
+    rc = DECRYPT(d, i, o)
 
     CLOSE_FILE(input_file, i)
     CLOSE_FILE(output_file, o)
@@ -1431,10 +1803,191 @@ def MENU_DECRYPT():
 
     return False
 
+def MENU_SIGN():
+    global DKK
+    global DF
+
+    PRINT_CWD()
+    private_key = INPUT_WITH_DEFAULT("Enter private key", DKK)
+    if private_key == None:
+        return True
+
+    rc = CHECK_PRIVATE_KEY(private_key)
+    if rc != None:
+        REPORT_ERROR("Error entering private key '{}' {}.".format(private_key, rc))
+        return False
+
+    d = DECODE_KEY(private_key)
+
+    if not VALID_SCALAR(d[1]):
+        REPORT_ERROR("Error entering private key '{}' invalid scalar.".format(private_key))
+        return False
+
+    input_file = INPUT_WITH_DEFAULT("Enter file or hash code", DF)
+    if input_file == None:
+       return True
+
+    if IS_HASHCODE(input_file):
+        e = DECODE_HASHCODE(input_file)
+    else:
+        rc = CHECK_INPUT(input_file)
+        if rc != None:
+            REPORT_ERROR("Error entering file '{}' {}.".format(input_file, rc))
+            return False
+
+        if input_file == "-":
+            all_lines = READ_CONSOLE()
+            i = io.BytesIO(bytes(all_lines, 'utf-8'))
+        else:
+            i = OPEN_FILE(input_file, READ_BINARY)
+
+        e = SHA256(i)
+        CLOSE_FILE(input_file, i)
+
+    PRINT("The sha256 hash code to be signed is:\n {}\n".format( ENCODE_HASHCODE(e) ))
+
+    sig_output = INPUT("Enter signature file to output: ")
+    if sig_output == None:
+       return True
+
+    rc = CHECK_OUTPUT(sig_output)
+    if rc != None:
+        REPORT_ERROR("Error entering signature file '{}' {}.".format(sig_output, rc))
+        return False
+
+    (r, s) = SIGN(d, e)
+
+    o = OPEN_FILE(sig_output, WRITE_TEXT)
+    w = BASE64_WRITER(o)
+    w.WRITE( INT_TO_BYTES(r, 32) )
+    w.WRITE( INT_TO_BYTES(s, 32) )
+    w.CLOSE()
+    CLOSE_FILE(sig_output, o)
+
+    if IS_HASHCODE(input_file):
+        PRINT("Created a signature for the hash code. Output written to \"{}\".\n".format(sig_output))
+    else:
+        PRINT("Created a signature for the file \"{}\". Output written to \"{}\".\n".format(input_file, sig_output))
+
+    DF = sig_output
+    DKK = private_key
+    return False
+
+def PRINT_GOOD(sig_input, input_file, e):
+    PRINT("GOOD\n")
+    if IS_HASHCODE(input_file):
+        PRINT("The file \"{}\" contains a valid signature for the sha256 hash code:\n".format(sig_input))
+        PRINT(" {}\n".format( ENCODE_HASHCODE(e) ))
+    else:
+        PRINT("The file \"{}\" contains a valid signature for the file \"{}\".\n".format(sig_input, input_file))
+        PRINT("Having sha256 hash code:\n")
+        PRINT(" {}\n".format( ENCODE_HASHCODE(e) ))
+
+def PRINT_BAD(sig_input, input_file, e):
+    PRINT("BAD\n")
+    if IS_HASHCODE(input_file):
+        PRINT("The file \"{}\" DOES NOT contain a valid signature for the sha256 hash code:\n".format(sig_input))
+        PRINT(" {}\n".format( ENCODE_HASHCODE(e) ))
+    else:
+        PRINT("The file \"{}\" DOES NOT contain a valid signature for the file \"{}\".\n".format(sig_input, input_file))
+        PRINT("Having sha256 hash code:\n")
+        PRINT(" {}\n".format( ENCODE_HASHCODE(e) ))
+
+def MENU_VERIFY():
+    global DPK
+    global DF
+
+    PRINT_CWD()
+    public_key = INPUT_WITH_DEFAULT("Enter public key", DPK)
+    if public_key == None:
+        return True
+
+    rc = CHECK_PUBLIC_KEY(public_key)
+    if rc != None:
+        REPORT_ERROR("Error entering public key '{}': {}.".format(public_key, rc))
+        return False
+
+    Q = DECODE_KEY(public_key)
+
+    if not VALID_CURVE_X(Q[0]):
+        REPORT_ERROR("Error entering public key '{}': not valid.".format(public_key))
+        return False
+
+    input_file = INPUT_WITH_DEFAULT("Enter file or hash code", DF)
+    if input_file == None:
+        return True
+
+    if IS_HASHCODE(input_file):
+        e = DECODE_HASHCODE(input_file)
+    else:
+        rc = CHECK_INPUT(input_file)
+        if rc != None:
+            REPORT_ERROR("Error entering file '{}' {}.".format(input_file, rc))
+            return False
+
+        if input_file == "-":
+            all_lines = READ_CONSOLE()
+            i = io.BytesIO(bytes(all_lines, 'utf-8'))
+        else:
+            i = OPEN_FILE(input_file, READ_BINARY)
+
+        e = SHA256(i)
+        CLOSE_FILE(input_file, i)
+
+    PRINT("The sha256 hash code to be verified is:\n")
+    PRINT(" {}\n".format( ENCODE_HASHCODE(e) ))
+
+    sig_input = INPUT("Enter signature file: ")
+    if sig_input == None:
+       return True
+
+    rc = CHECK_INPUT(sig_input)
+    if rc != None:
+        REPORT_ERROR("Error entering signature file '{}' {}.".format(sig_input, rc))
+        return False
+
+    if sig_input == "-":
+        all_lines = READ_CONSOLE()
+        i = io.StringIO(all_lines)
+    else:
+        i = OPEN_FILE(sig_input, READ_TEXT)
+
+    rdr = BASE64_READER(i)
+    r = rdr.READ(32)
+    if len(r) != 32:
+        REPORT_ERROR("{}: error reading signature. unable to read r. len(32) != len({})".format(sig_input, len(r)))
+        return False
+
+    s = rdr.READ(32)
+    if len(s) != 32:
+        REPORT_ERROR("{}: error reading signature. unable to read s. len(32) != len({})".format(sig_input, len(s)))
+        return False
+
+    if not rdr.EOF():
+        REPORT_ERROR("{}: error reading signature. data stream too long".format(sig_input))
+        return False
+
+    CLOSE_FILE(sig_input, i)
+
+    r = BYTES_TO_INT(r)
+    s = BYTES_TO_INT(s)
+
+    good = VERIFY(Q, e, (r, s))
+
+    if good:
+        PRINT_GOOD(sig_input, input_file, e)
+    else:
+        PRINT_BAD(sig_input, input_file, e)
+
+    DF = input_file
+    DPK = public_key
+
+    return False
+
 def MENU_SHOWFILE():
     global DF
 
-    PRINT("Current working directory: \"{}\"\n".format(os.getcwd()))
+    PRINT_CWD()
     input_file = INPUT_WITH_DEFAULT("Enter file to show", DF)
     if input_file == None:
         return True
@@ -1464,7 +2017,7 @@ def MENU_SHOWFILE():
 def MENU_CREATEFILE():
     global DF
 
-    PRINT("Current working directory: \"{}\"\n".format(os.getcwd()))
+    PRINT_CWD()
     input_file = INPUT("Enter file to create: ")
     if input_file == None:
         return True
@@ -1488,6 +2041,92 @@ def MENU_CREATEFILE():
     DF = input_file
     return False
 
+def MENU_CD():
+    global DDIR
+
+    PRINT_CWD()
+    dir = INPUT_WITH_DEFAULT("Change working directory to", DDIR)
+    if dir == None:
+        return True
+    prev_dir = CWD()
+    rc = CHDIR(dir)
+    if rc == None:
+        PRINT_CWD()
+        DDIR = prev_dir
+    else:
+        REPORT_ERROR("{}: {}\n".format(dir, rc))
+        return False
+
+    return False
+
+def MENU_DIR():
+    PRINT_CWD()
+    files = os.listdir(".")
+    files.sort()
+    for f in files:
+        PRINT("  \"{}\"\n".format(f))
+    PRINT("\n")
+    return False
+
+def MENU_FILE_OPERATIONS():
+    Over = -1
+    Under = -2
+    Bad = -3
+
+    last_error = None
+    while True:
+        PRINT("""
+1) Show File
+2) Create File
+3) Change Directory
+4) List Directory
+5) Return To Main Menu
+""")
+
+        if last_error != None:
+            PRINT("\n" + last_error + "\n")
+            last_error = None
+
+        str = INPUT("Choose 1-5? ")
+        if str == None:
+            PRINT("\n")
+            return True
+        elif TRIM(str) == "":
+            continue
+
+        try:
+            choice = int(str)
+            if choice > 5:
+                choice = Over
+            elif choice < 1:
+                choice = Under
+        except:
+            choice = Bad
+
+        PRINT("\n")
+
+        if choice == 1:
+            exit_program = MENU_SHOWFILE()
+            return exit_program
+        elif choice == 2:
+            exit_program = MENU_CREATEFILE()
+            return exit_program
+        elif choice == 3:
+            exit_program = MENU_CD()
+            return exit_program
+        elif choice == 4:
+            exit_program = MENU_DIR()
+            return exit_program
+        elif choice == 5:
+            PRINT("\n")
+            return False
+        elif choice == Over:
+            last_error = "{} is too big! Enter a number between 1 and 5.\n".format(str)
+        elif choice == Under:
+            last_error = "{} is too small! Enter a number between 1 and 5.\n".format(str)
+        elif choice == Bad:
+            last_error = "Invalid choice '{}', enter a number between 1 and 5.\n".format(str)
+
 def MENU_HELP():
     CMD_HELP()
     return False
@@ -1496,9 +2135,9 @@ def MENU_QUIT():
     return True
 
 def MENU():
-    OVER = 8
-    UNDER = 9
-    BAD = 10
+    Over = -1
+    Under = -2
+    Bad = -3
 
     last_error = None
     done = False
@@ -1507,30 +2146,31 @@ def MENU():
 1) Create Keys
 2) Encrypt file
 3) Decrypt file
-4) Show File
-5) Create File
-6) Help
-7) Quit
+4) Create Signature
+5) Verify Signature
+6) File Operations
+7) Help
+8) Quit
 """)
 
         if last_error != None:
             PRINT("\n" + last_error + "\n")
             last_error = None
 
-        str = INPUT("Choose 1-7? ")
+        str = INPUT("Choose 1-8? ")
         if str == None:
-            str = "7"
+            str = "8"
         elif TRIM(str) == "":
             continue
 
         try:
             choice = int(str)
-            if choice > 7:
-                choice = OVER
+            if choice > 8:
+                choice = Over
             elif choice < 1:
-                choice = UNDER
+                choice = Under
         except:
-            choice = BAD
+            choice = Bad
 
         PRINT("\n")
 
@@ -1541,23 +2181,25 @@ def MENU():
         elif choice == 3:
             done = MENU_DECRYPT()
         elif choice == 4:
-            done = MENU_SHOWFILE()
+            done = MENU_SIGN()
         elif choice == 5:
-            done = MENU_CREATEFILE()
+            done = MENU_VERIFY()
         elif choice == 6:
-            done = MENU_HELP()
+            done = MENU_FILE_OPERATIONS()
         elif choice == 7:
+            done = MENU_HELP()
+        elif choice == 8:
             done = MENU_QUIT()
-        elif choice == OVER:
-            last_error = "{} is too big! Enter a number between 1 and 7.\n".format(str)
-        elif choice == UNDER:
-            last_error = "{} is too small! Enter a number between 1 and 7.\n".format(str)
-        elif choice == BAD:
-            last_error = "Invalid choice '{}', enter a number between 1 and 7.\n".format(str)
+        elif choice == Over:
+            last_error = "{} is too big! Enter a number between 1 and 8.\n".format(str)
+        elif choice == Under:
+            last_error = "{} is too small! Enter a number between 1 and 8.\n".format(str)
+        elif choice == Bad:
+            last_error = "Invalid choice '{}', enter a number between 1 and 8.\n".format(str)
 
 ######################################################################
 #
-# Section 7: MAIN()
+# Section 8: MAIN()
 #
 ######################################################################
 
@@ -1573,6 +2215,10 @@ def MAIN():
             CMD_ENCRYPT(sys.argv)
         elif command == "decrypt":
             CMD_DECRYPT(sys.argv)
+        elif command == "sign":
+            CMD_SIGN(sys.argv)
+        elif command == "verify":
+            CMD_VERIFY(sys.argv)
         elif command == "help":
             CMD_HELP()
         else:
