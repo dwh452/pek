@@ -1257,20 +1257,16 @@ def VERIFY(Q, e, signature):
     Q = PUBLIC_KEY_TO_POINT(Q)
     e = BYTES_TO_INT(e)
     (r, s) = signature
-
     s_inv = pow(s, N-2, N)        # fermat's little theorem
     u1 = s_inv * e % N
     u2 = s_inv * r % N
-
     A = SCALE_POINT(G, u1)
     B = SCALE_POINT(Q, u2)
     P = ADD_POINTS(A, B)
     if P.x == None:
         return False
-
     x1 = P.x.num % N
     v = x1
-
     if v == r:
         return True
     else:
@@ -1489,6 +1485,10 @@ Examples:
     $ pek verify  UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 MANIFESTO.doc  MANIFESTO.sig
     GOOD
 
+    $ cat MANIFESTO.sig
+    e2WmynGK6eYwN5pTSW8wQYV8/CfC9q1lUE3O6qYCPhydLZE3kXxWvSNPVQQ5Q3
+    9j9dunCDcbc+FoYa5PuZmKEQ
+
     $ shasum -a 256 MANIFESTO.doc
     6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b
 
@@ -1537,7 +1537,7 @@ def CMD_ENCRYPT(args):
     Q = DECODE_KEY(public_key)
 
     if not VALID_CURVE_X(Q[0]):
-        REPORT_ERROR("encrypt: public key '{}' is not valid".format(public_key))
+        USAGE("{}: <public-key> argument is not valid".format(public_key))
         return
 
     rc = ENCRYPT(Q, i, o)
@@ -1576,7 +1576,8 @@ def CMD_DECRYPT(args):
     d = DECODE_KEY(private_key)
 
     if not VALID_SCALAR(d[0]):
-        REPORT_ERROR("encrypt: private key '{}' invalid scalar".format(private_key))
+        USAGE("{}: <private-key> argument invalid scalar".format(private_key))
+        return
 
     i = OPEN_FILE(input_file, READ_TEXT)
     o = OPEN_FILE(output_file, WRITE_BINARY)
@@ -1591,7 +1592,50 @@ def CMD_DECRYPT(args):
         return
 
 def CMD_SIGN(args):
-    pass
+    if len(args) != 5:
+        USAGE("incorrect number of arguments")
+        return
+
+    private_key = args[2]
+    input_file = args[3]
+    sig_output = args[4]
+
+    rc = CHECK_PRIVATE_KEY(private_key)
+    if rc != None:
+        USAGE("{}: <private-key> argument {}".format(private_key, rc))
+        return
+
+    rc = CHECK_OUTPUT(sig_output)
+    if rc != None:
+        USAGE("{}: {}".format(sig_output, rc))
+        return
+
+    d = DECODE_KEY(private_key)
+
+    if not VALID_SCALAR(d[0]):
+        USAGE("{}: <private-key> argument invalid scalar".format(private_key))
+        return
+
+    if IS_HASHCODE(input_file):
+        e = DECODE_HASHCODE(input_file)
+    else:
+        rc = CHECK_INPUT(input_file)
+        if rc != None:
+            USAGE("{}: {}".format(input_file, rc))
+            return
+
+        i = OPEN_FILE(input_file, READ_BINARY)
+        e = SHA256(i)
+        CLOSE_FILE(input_file, i)
+
+    (r, s) = SIGN(d, e)
+
+    o = OPEN_FILE(sig_output, WRITE_TEXT)
+    w = BASE64_WRITER(o)
+    w.WRITE( INT_TO_BYTES(r, 32) )
+    w.WRITE( INT_TO_BYTES(s, 32) )
+    w.CLOSE()
+    CLOSE_FILE(sig_output, o)
 
 def CMD_VERIFY(args):
     pass
