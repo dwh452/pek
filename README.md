@@ -14,7 +14,7 @@ These three components from other authors have been included into this script:
 ```
    Elliptic Curve   Jimmy Song, https://github.com/jimmysong/programmingbitcoin.git
    AES              Brandon Sterne, https://gist.github.com/raullenchai/2920069
-   bytes_to_int     brunsgaard, https://stackoverflow.com/questions/34009653/convert-bytes-to-int
+   SHA256           Thomas Dixon, https://github.com/thomdixon/pysha2
 ```
 
 # Dependencies
@@ -23,14 +23,19 @@ These three components from other authors have been included into this script:
    os.path.isfile
    os.path.exists
    os.getcwd
+   os.chdir
+   os.listdir
    sys.stdin
    sys.stdout
    sys.stderr
    sys.argv
    io.StringIO
    io.BytesIO
-   copy(), open(), close(), read(), write()
-   input()
+   copy.copy
+   copy.deepcopy
+   struct.unpack
+   struct.pack
+   input(), open(), close(), read(), write()
 ```
 
 # Synopsis
@@ -59,37 +64,60 @@ These three components from other authors have been included into this script:
     1) Create Keys
     2) Encrypt file
     3) Decrypt file
-    4) Show File
-    5) Create File
-    6) Help
-    7) Quit
-    Choose 1-7? 7
+    4) Create Signature
+    5) Verify Signature
+    6) File Operations
+    7) Help
+    8) Quit
+    Choose 1-8? 8
 
     C:\>
 ```
 
 # Usage
 ```
-Usage: pek create
-       pek encrypt  <public-key>   <input>  <output>
-       pek decrypt  <private-key>  <input>  <output>
-       pek help
-       pek            Interactive Menu!!!
+Usage:
+    pek create
+    pek encrypt  <public-key>      <input>        <output>
+    pek decrypt  <private-key>     <input>        <output>
+    pek sign     <private-key>  <file-or-hash>  <signature-out>
+    pek verify   <public-key>   <file-or-hash>  <signature-in>
+    pek help
+    pek              Interactive Menu!!!
 
-       <public-key>   this is a public key obtained from calling "pek create"
-       <private-key>  this is a private key obtained from calling "pek create"
-       <input>        this is the filename to read, use "-" to read from standard input
-       <output>       this is the filename to write, use "-" to write to standard output
+    <public-key>     This is a public key obtained from calling "pek create".
+    <private-key>    This is a private key obtained from calling "pek create".
+    <input>          This is the filename to read, use "-" to read from standard input.
+    <output>         This is the filename to write, use "-" to write to standard output.
+    <file-or-hash>   The filename to read and calculate the hash code for. Use "-" for standard input.
+                     A hash code can be given instead. This is a 64-character string consisting of hex digits.
+    <signature-out>  This is the signature filename to create, use "-" for standard output.
+    <signature-in>   This is the signature filename to read, use "-" for standard input.
 
-    Example:
-        pek create
-        pek encrypt UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 f1.txt f1.pek
-        pek decrypt lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk f1.pek original.txt
+Examples:
+    $ pek create
+    Public key:  UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4
+    Private key: lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk
+
+    $ pek encrypt UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 f1.txt f1.pek
+    $ pek decrypt lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk f1.pek original.txt
+
+    $ pek sign    lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk MANIFESTO.doc  MANIFESTO.sig
+    $ pek verify  UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 MANIFESTO.doc  MANIFESTO.sig
+    GOOD
+
+    $ shasum -a 256 MANIFESTO.doc
+    6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b
+
+    $ pek sign   lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk 6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b MANIFESTO.sig
+    $ pek verify UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b MANIFESTO.sig
+    GOOD
+
 ```
 
-# About
-The private key is a random 256-bit value (represented by the variable 'k').
-The public key is the secp256k1 generator point multiplied by the private key (represented by the variable 'P').
+# Encryption / Decryption
+The private key is a random 256-bit value (represented by the variable 'd').
+The public key is the secp256k1 generator point multiplied by the private key (represented by the variable 'Q').
 
 The shared key (see the 'sk' variable in ENCRYPT() and DECRYPT()) is derived
 using ECDH (Elliptic Curve Diffie-Hellman) Key Exchange. An ephemeral private/public key pair is
@@ -109,8 +137,14 @@ The encrypted file format is a stream of BASE64 characters with allowance
 for whitespace appearing anywhere. The first 32-bytes are the the public ephemeral key.
 The remaining data is the encrypted form of the plaintext.
 
+# Signing / Verification:
+The ECDSA (Elliptic Curve Digital Signature Algorithm) is used.
+The 256-bit hash code is calculated using SHA256.
+See the SIGN() and VERIFY() functions. The hash code is represented by the variable 'e'.
+The signature file format is 512-bits of BASE64 characters representing the tuple (r, s).
+
 ## How To Use (Sender)
-                                                                                                                                                                  
+                                                                                                                                                                 
 ```
 $ vi msg.txt
 
