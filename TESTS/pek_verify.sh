@@ -84,10 +84,8 @@ def TEST():
 	
 	print("Test 9",G)
 	print("Test 9.1",VALID_CURVE_X(G.x.num))
-	print("Test 9.2",VALID_CURVE_X( CREATE()[0][1] ))
-	kp = CREATE()
-	Q = PUBLIC_KEY_TO_POINT(kp[0])
-	d = PRIVATE_KEY_TO_INT(kp[1])
+	print("Test 9.2",VALID_CURVE_X( CREATE()[0].x.num ))
+	(Q, d) = CREATE()
 	print("Test 9.3", Q == SCALE_POINT(G, d))
 	print("Test 9.4", SCALE_POINT(G, N-1))
 	
@@ -115,8 +113,6 @@ def TEST():
 	print("Test 11.2",IS_BASE64_CHAR("="),IS_BASE64_CHAR("@"))
 	
 	(Pub, k) = CREATE()
-	Pub = PUBLIC_KEY_TO_POINT(Pub)
-	k = PRIVATE_KEY_TO_INT(k)
 	e = RANDOM256()
 	E = SCALE_POINT(G, e)
 	sk1 = SCALE_POINT(Pub, e)
@@ -276,8 +272,8 @@ def TEST():
 	print("Test 23.2",TP2, k2, BYTES_TO_POINT(k2))
 	print("Test 23.3",TP3, k3, BYTES_TO_POINT(k3))
 
-	k4 = INT_TO_BYTES(0xdeadbeef, 32) + INT_TO_BYTES(PublicKeyEvenY, 1)
-	k5 = INT_TO_BYTES(0xdeadbeef, 32) + INT_TO_BYTES(PublicKeyOddY, 1)
+	k4 = INT_TO_BYTES(0xdeadbeef0, 32) + INT_TO_BYTES(PublicKeyEvenY, 1)
+	k5 = INT_TO_BYTES(0xdeadbeef0, 32) + INT_TO_BYTES(PublicKeyOddY, 1)
 	print("Test 23.4",k4, BYTES_TO_POINT(k4))
 	print("Test 23.5",k4, BYTES_TO_POINT(k5))
 
@@ -303,14 +299,14 @@ def TEST():
 	# $ echo 'Hello, World!' | shasum -a 256 -
 	# c98c24b677eff44860afea6f493bbaec5bb1c4cbb209c6fc2bbb47f66ff2ad31  -
 	ss = io.BytesIO(b"Hello, World!\n")
-	print("Test 27.1", hex( BYTES_TO_INT( SHA256(ss) ) ) )
+	print("Test 27.1", hex( SHA256(ss) ) )
 
 	###### AES_ENCRYPT / AES_DECRYPT
 	ss = io.BytesIO(b"Secret90210\n")
-	ak1 = SHA256(ss)
+	ak1 = INT_TO_BYTES( SHA256(ss), 32)
 
 	ss = io.BytesIO(b"Secret90211\n")
-	ak2 = SHA256(ss)
+	ak2 = INT_TO_BYTES( SHA256(ss), 32)
 
 	cipher = AES_ENCRYPT(ak1, bytearray(b'HelloThisMustBe32BytesLong256Bye') )
 	plain = AES_DECRYPT(ak1, cipher)
@@ -410,7 +406,7 @@ Test 19.2 S256Point(69fabff24635434a40be1167e637f12216245bd4fbdae5238db20258303c
 Test 19.3 S256Point(df687630d640ec87b03bc6b9eb79a6d3ad1338261a1736f09eca86d86b6ff7ce, 132d7c20969d908e5834efd07991baa0cb668dd1417420bddaa627d9b779bd04) (2, 101050333051515256466382367629335744754571059598319524671696498993890329622478)
 Test 20.1 85072186229153234584177236419013418181421367435692072948161198905817493787349 (1, 85072186229153234584177236419013418181421367435692072948161198905817493787349)
 Test 22.1 True
-Test 22.2 False
+Test 22.2 True
 Test 22.3 True
 Test 22.4 False
 Test 22.5 False
@@ -429,8 +425,8 @@ Test 22b.6 True S256Point(79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f281
 Test 23.1 S256Point(79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798, 483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8) bytearray(b'y\xbef~\xf9\xdc\xbb\xacU\xa0b\x95\xce\x87\x0b\x07\x02\x9b\xfc\xdb-\xce(\xd9Y\xf2\x81[\x16\xf8\x17\x98\x02') S256Point(79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798, 483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8)
 Test 23.2 S256Point(440ba9e5ba2ab08a67abc301cd7200bb27885caca6e06313b514a0e90ae85977, 8d514de7d98a45fabe9b114cd091db23c4fbb77680d2ddfac39ee284606e4d51) bytearray(b"D\x0b\xa9\xe5\xba*\xb0\x8ag\xab\xc3\x01\xcdr\x00\xbb\'\x88\\\xac\xa6\xe0c\x13\xb5\x14\xa0\xe9\n\xe8Yw\x03") S256Point(440ba9e5ba2ab08a67abc301cd7200bb27885caca6e06313b514a0e90ae85977, 8d514de7d98a45fabe9b114cd091db23c4fbb77680d2ddfac39ee284606e4d51)
 Test 23.3 S256Point(a26c16a01562a213d1fcb755e52a2ee326278ef6ded93af1692b29c5b43bb4a0, c9a9ec49fd517d92cfc618a1d5a67d98e19136339437de722ba4819d93bbc1db) bytearray(b"\xa2l\x16\xa0\x15b\xa2\x13\xd1\xfc\xb7U\xe5*.\xe3&\'\x8e\xf6\xde\xd9:\xf1i+)\xc5\xb4;\xb4\xa0\x03") S256Point(a26c16a01562a213d1fcb755e52a2ee326278ef6ded93af1692b29c5b43bb4a0, c9a9ec49fd517d92cfc618a1d5a67d98e19136339437de722ba4819d93bbc1db)
-Test 23.4 bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xde\xad\xbe\xef\x02') S256Point(infinity)
-Test 23.5 bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xde\xad\xbe\xef\x02') S256Point(infinity)
+Test 23.4 bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\r\xea\xdb\xee\xf0\x02') S256Point(0000000000000000000000000000000000000000000000000000000deadbeef0, 7cf678f6863ce7715846ec286a8081895d4e397d82f302a8ba6fe4950902f5ee)
+Test 23.5 bytearray(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\r\xea\xdb\xee\xf0\x02') S256Point(0000000000000000000000000000000000000000000000000000000deadbeef0, 8309870979c3188ea7b913d7957f7e76a2b1c6827d0cfd5745901b69f6fd0641)
 Test 24.1 True True True
 Test 25.1 0 1 2 3
 Test 25.2 0 1 2 3
@@ -442,11 +438,11 @@ Test 26.4 False
 Test 26.5 False
 Test 26.6 False
 Test 27.1 0xc98c24b677eff44860afea6f493bbaec5bb1c4cbb209c6fc2bbb47f66ff2ad31
-Test 28.1 b'\xfa\xd2WV\xbc\xbc\x7f#d\xeb{C^6y\x9dq%\xe7\x96<\xf0X\xbb\xe9\x89\x18c\x0c\x10\xcb\xa0' bytearray(b'\xe6(\xe5\x97\xb1\x9e\xb9\x9f\xd4\x00\xc0k\xca\xa9g\x14s\xa85A\x0c\xd4Q\xa6RO%kg4^\xdc') bytearray(b'HelloThisMustBe32BytesLong256Bye')
-Test 28.2 b'\xb2\x97\x1c\x0c\xab\xc2c\xfc\x1bJ\xd5\xca\x14\xd1-\xd7|\xc1\xc2\xbd\xb8\x1e\xe2\x03\xa4(\x8d;a\xccr\xe8' bytearray(b'\xd9\xcf\xd3\xe0\xfc\x99#^\x12\x98-\t\xaf\xc3a1l\x8fU\x14\x13g\x93\x1a\x14\xe1\x06\xc3\xec\xbe_\xad') bytearray(b'HelloThisMustBe32BytesLong256Bye')
+Test 28.1 bytearray(b'\xfa\xd2WV\xbc\xbc\x7f#d\xeb{C^6y\x9dq%\xe7\x96<\xf0X\xbb\xe9\x89\x18c\x0c\x10\xcb\xa0') bytearray(b'\xe6(\xe5\x97\xb1\x9e\xb9\x9f\xd4\x00\xc0k\xca\xa9g\x14s\xa85A\x0c\xd4Q\xa6RO%kg4^\xdc') bytearray(b'HelloThisMustBe32BytesLong256Bye')
+Test 28.2 bytearray(b'\xb2\x97\x1c\x0c\xab\xc2c\xfc\x1bJ\xd5\xca\x14\xd1-\xd7|\xc1\xc2\xbd\xb8\x1e\xe2\x03\xa4(\x8d;a\xccr\xe8') bytearray(b'\xd9\xcf\xd3\xe0\xfc\x99#^\x12\x98-\t\xaf\xc3a1l\x8fU\x14\x13g\x93\x1a\x14\xe1\x06\xc3\xec\xbe_\xad') bytearray(b'HelloThisMustBe32BytesLong256Bye')
 Test 28.3 bytearray(b'\x90C\x8f@\xabO\x9c\x95\x92\xee0\xa9\xaa3U\x1a0\xd4\xa3N\x87ZB0\xd7b\x1e`\xd9`\xb4?')
-Test 29.1 b"\xd8KAsR\x93\xbd\x81\x89U~,\xba\x00\xfd,\xe9\x1c\xee\xc6\xd09\x8e\x0eN'\xecU\xfb\x9d\xb3Q"
-Test 29.2 b'\x9e\x1a\xce"\xb9\x11z\xdfy\x8f\x07\xd0/\\$F\xbe\xfag\xfd4\xf0-Mp\xfb\xa4\xa8\xc5\x1d,-'
+Test 29.1 bytearray(b"\xd8KAsR\x93\xbd\x81\x89U~,\xba\x00\xfd,\xe9\x1c\xee\xc6\xd09\x8e\x0eN\'\xecU\xfb\x9d\xb3Q")
+Test 29.2 bytearray(b'\x9e\x1a\xce"\xb9\x11z\xdfy\x8f\x07\xd0/\\$F\xbe\xfag\xfd4\xf0-Mp\xfb\xa4\xa8\xc5\x1d,-')
 _EOF_
 ################ EXPECTED SECTION #########################
 

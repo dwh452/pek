@@ -640,13 +640,13 @@ def createRoundKey(expandedKey, n):
     return expandedKey[(n*16):(n*16+16)]
 
 # create a key from a user-supplied password using SHA-256
-def passwordToKey(password):
-    sha256 = hashlib.sha256()
-    sha256.update(password)
-    key = []
-    for c in list(sha256.digest()):
-        key.append(ord(c))
-    return key
+#def passwordToKey(password):
+#    sha256 = hashlib.sha256()
+#    sha256.update(password)
+#    key = []
+#    for c in list(sha256.digest()):
+#        key.append(ord(c))
+#    return key
 
 # wrapper function for 14 rounds of AES since we're using a 256-bit key
 def aesMain(state, expandedKey, numRounds=14):
@@ -1051,19 +1051,6 @@ def IS_BASE64_CHAR(ch):
 #
 ######################################################################
 
-# Data Types Explained:
-#
-#   key         is a 2-tuple        (int, int)      (key_type, data)
-#   keypair     is a 2-tuple        (key, key)
-#   point       is a class          class S256Point
-#   signature   is a 2-tuple        (int, int)      (r, s)
-#
-
-InvalidKey      = 0x00
-PrivateKey      = 0x01
-PublicKeyEvenY  = 0x02      # Public Key Where the Y coordinate is Even
-PublicKeyOddY   = 0x03      # Public Key Where the Y coordinate is Odd
-
 def PAD(block, n):
     if len(block) < n:
         block.append( 0xFF )
@@ -1086,14 +1073,40 @@ def INT_TO_BYTES(value, length):
 def BYTES_TO_INT(bytes):
     return int.from_bytes(bytes, 'big')
 
+def POINT_TO_BYTES(P):
+    i = (P.x.num * 256) + (2 if P.y.num % 2 == 0 else 3)
+    bytes = INT_TO_BYTES(i, 33)
+    return bytes
+
+def BYTES_TO_POINT(bytes):
+    if len(bytes) != 33:
+        return S256Point(None, None)
+    data = BYTES_TO_INT(bytes)
+    x = data // 256
+    if not VALID_CURVE_X(x):
+        return S256Point(None, None)
+    (y1, y2) = SOLVE(x)
+    if data % 256 == 2:
+        y = y1
+    else:
+        y = y2
+    return S256Point(x, y)
+
+def SOLVE(x):
+    #
+    # solve for (+y, -y):  y^2 = x^3 + a * x + b
+    #
+    ysquared = S256Field(x)**3 + S256Field(A) * S256Field(x) + S256Field(B)
+    y1 = ysquared.sqrt()
+    y2 = S256Field(0) - y1
+    if y1.num % 2 == 0:
+        return (y1.num, y2.num)
+    else:
+        return (y2.num, y1.num)
+
 def VALID_CURVE_X(x):
-    #
-    # solve for y:  y^2 = x^3 + a * x + b
-    #
     try:
-        ysquared = S256Field(x)**3 + S256Field(A) * S256Field(x) + S256Field(B)
-        y = ysquared.sqrt()
-        S256Point(x, y.num)
+        SOLVE(x)
     except:
         return False
     return True
@@ -1101,71 +1114,11 @@ def VALID_CURVE_X(x):
 def VALID_SCALAR(scalar):
     return scalar >= 1 and scalar <= N-1
 
-def PUBLIC_KEY_TO_POINT(key):
-    (key_type, data) = key
-    x = data
-
-    #
-    # solve for y:  y^2 = x^3 + a * x + b
-    #
-    ysquared = S256Field(x)**3 + S256Field(A) * S256Field(x) + S256Field(B)
-    y = ysquared.sqrt()
-    if ( y.num % 2 == 0 and key_type == PublicKeyEvenY
-            or y.num % 2 == 1 and key_type == PublicKeyOddY ):
-        return S256Point(x, y.num)
-    else:
-        other_y = S256Field(0) - y
-        return S256Point(x, other_y.num)
-
-def POINT_TO_PUBLIC_KEY(Q):
-    if Q.y.num % 2 == 0:
-        key_type = PublicKeyEvenY
-    else:
-        key_type = PublicKeyOddY
-    data = Q.x.num
-    return (key_type, data)
-
-def PRIVATE_KEY_TO_INT(d):
-    (key_type, data) = d
-    return data
-
-def INT_TO_PRIVATE_KEY(x):
-    return (PrivateKey, x)
-
 def SCALE_POINT(P, scalar):
     return scalar * P
 
 def ADD_POINTS(A, B):
     return A + B
-
-def POINT_TO_BYTES(P):
-    bytes = INT_TO_BYTES(P.x.num, 32)
-    if P.y.num % 2 == 0:
-        bytes = bytes + b'\x02'
-    else:
-        bytes = bytes + b'\x03'
-    return bytes
-
-def BYTES_TO_POINT(bytes):
-    if len(bytes) != 33:
-        return S256Point(None, None)
-
-    data = BYTES_TO_INT(bytes[:32])
-
-    even_flag = bytes[32:]
-    if even_flag == b'\x02':
-        key_type = PublicKeyEvenY
-    elif even_flag == b'\x03':
-        key_type = PublicKeyOddY
-    else:
-        return S256Point(None, None)
-
-    if not VALID_CURVE_X(data):
-        return S256Point(None, None)
-
-    key = (key_type, data)
-    P = PUBLIC_KEY_TO_POINT(key)
-    return P
 
 def AES_ENCRYPT(key, bytes):
     s1 = slice(0, 16)
@@ -1185,7 +1138,7 @@ def SHA256(i):
         s.update(bytes)
         if len(bytes) != 256:
             eof = True
-    hashcode = s.digest()
+    hashcode = BYTES_TO_INT(s.digest())
     return hashcode
 
 def RANDOM256():
@@ -1198,18 +1151,14 @@ def RANDOM256():
 def HASH_POINT(P):
     bytes = POINT_TO_BYTES(P)
     ss = io.BytesIO(bytes)
-    return SHA256(ss)
+    return INT_TO_BYTES(SHA256(ss), 32)
 
 def CREATE():
     d = RANDOM256()
     Q = SCALE_POINT(G, d)
-
-    Q = POINT_TO_PUBLIC_KEY(Q)
-    d = INT_TO_PRIVATE_KEY(d)
     return (Q, d)
 
 def ENCRYPT(Q, i, o):
-    Q = PUBLIC_KEY_TO_POINT(Q)
     w = BASE64_WRITER(o)
     e = RANDOM256()
     E = SCALE_POINT(G, e)
@@ -1232,7 +1181,6 @@ def ENCRYPT(Q, i, o):
     return None
 
 def DECRYPT(d, i, o):
-    d = PRIVATE_KEY_TO_INT(d)
     r = BASE64_READER(i)
     E = r.READ(33)
     if len(E) != 33:
@@ -1258,9 +1206,6 @@ def DECRYPT(d, i, o):
     return None
 
 def SIGN(d, e):
-    d = PRIVATE_KEY_TO_INT(d)
-    e = BYTES_TO_INT(e)
-
     while True:
         k = RANDOM256()
         P = SCALE_POINT(G, k)
@@ -1276,8 +1221,6 @@ def SIGN(d, e):
     return (r, s)
 
 def VERIFY(Q, e, signature):
-    Q = PUBLIC_KEY_TO_POINT(Q)
-    e = BYTES_TO_INT(e)
     (r, s) = signature
     s_inv = pow(s, N-2, N)        # fermat's little theorem
     u1 = s_inv * e % N
@@ -1299,6 +1242,18 @@ def VERIFY(Q, e, signature):
 # Section 6: Command Line Processing
 #
 ######################################################################
+
+#
+# A key is a 2-tuple: (key_data, data)
+#
+# key_data: is 0, 1, 2, or 3.
+# data:     is an integer representing the private key, or public key x-coordinate
+#
+
+InvalidKey      = 0x00
+PrivateKey      = 0x01
+PublicKeyEvenY  = 0x02      # Public key where the Y coordinate is even
+PublicKeyOddY   = 0x03      # Public key where the Y coordinate is odd
 
 def TRIM(str):
     return str.strip()
@@ -1392,6 +1347,34 @@ def CHECK_PRIVATE_KEY(str):
 
     return None
 
+######################################################################  KJS BEGIN
+def PUBLIC_KEY_TO_POINT(key):
+    (key_type, data) = key
+    x = data
+
+    (y1, y2) = SOLVE(x)
+
+    if key_type == PublicKeyEvenY:
+        return S256Point(x, y1)
+    else:
+        return S256Point(x, y2)
+
+def POINT_TO_PUBLIC_KEY(Q):
+    if Q.y.num % 2 == 0:
+        key_type = PublicKeyEvenY
+    else:
+        key_type = PublicKeyOddY
+    data = Q.x.num
+    return (key_type, data)
+
+def PRIVATE_KEY_TO_INT(d):
+    (key_type, data) = d
+    return data
+
+def INT_TO_PRIVATE_KEY(x):
+    return (PrivateKey, x)
+######################################################################  KJS END
+
 def IS_HASHCODE(str):
     if len(str) != 64:
         return False
@@ -1401,10 +1384,10 @@ def IS_HASHCODE(str):
     return True
 
 def DECODE_HASHCODE(str):
-    return INT_TO_BYTES( int(str, 16), 32)
+    return int(str, 16)
 
 def ENCODE_HASHCODE(hc):
-    return format( BYTES_TO_INT(hc), '064x' )
+    return format( hc, '064x' )
 
 def CHECK_INPUT(input_file):
     if input_file == "-":
@@ -1522,9 +1505,13 @@ def CMD_CREATE(args):
         USAGE("too many arguments for 'create'")
         return
 
-    keypair = CREATE()
-    PRINT("Public key:  {}\n".format( ENCODE_KEY(keypair[0]) ))
-    PRINT("Private key: {}\n".format( ENCODE_KEY(keypair[1]) ))
+    (Q, d) = CREATE()
+
+    pub = POINT_TO_PUBLIC_KEY(Q)
+    priv = INT_TO_PRIVATE_KEY(d)
+
+    PRINT("Public key:  {}\n".format( ENCODE_KEY(pub) ))
+    PRINT("Private key: {}\n".format( ENCODE_KEY(priv) ))
 
 def CMD_ENCRYPT(args):
     if len(args) != 5:
@@ -1552,11 +1539,13 @@ def CMD_ENCRYPT(args):
 
     i = OPEN_FILE(input_file, READ_BINARY)
     o = OPEN_FILE(output_file, WRITE_TEXT)
-    Q = DECODE_KEY(public_key)
+    pub = DECODE_KEY(public_key)
 
-    if not VALID_CURVE_X(Q[0]):
+    if not VALID_CURVE_X(pub[1]):
         USAGE("{}: <public-key> argument is not valid".format(public_key))
         return
+
+    Q = PUBLIC_KEY_TO_POINT(pub)
 
     rc = ENCRYPT(Q, i, o)
 
@@ -1591,14 +1580,16 @@ def CMD_DECRYPT(args):
         USAGE("{}: {}".format(output_file, rc))
         return
 
-    d = DECODE_KEY(private_key)
+    priv = DECODE_KEY(private_key)
 
-    if not VALID_SCALAR(d[0]):
+    if not VALID_SCALAR(priv[1]):
         USAGE("{}: <private-key> argument invalid scalar".format(private_key))
         return
 
     i = OPEN_FILE(input_file, READ_TEXT)
     o = OPEN_FILE(output_file, WRITE_BINARY)
+
+    d = PRIVATE_KEY_TO_INT(priv)
 
     rc = DECRYPT(d, i, o)
 
@@ -1628,9 +1619,9 @@ def CMD_SIGN(args):
         USAGE("{}: {}".format(sig_output, rc))
         return
 
-    d = DECODE_KEY(private_key)
+    priv = DECODE_KEY(private_key)
 
-    if not VALID_SCALAR(d[0]):
+    if not VALID_SCALAR(priv[1]):
         USAGE("{}: <private-key> argument invalid scalar".format(private_key))
         return
 
@@ -1645,6 +1636,8 @@ def CMD_SIGN(args):
         i = OPEN_FILE(input_file, READ_BINARY)
         e = SHA256(i)
         CLOSE_FILE(input_file, i)
+
+    d = PRIVATE_KEY_TO_INT(priv)
 
     (r, s) = SIGN(d, e)
 
@@ -1669,9 +1662,9 @@ def CMD_VERIFY(args):
         USAGE("{}: <public-key> argument {}".format(public_key, rc))
         return
 
-    Q = DECODE_KEY(public_key)
+    pub = DECODE_KEY(public_key)
 
-    if not VALID_CURVE_X(Q[0]):
+    if not VALID_CURVE_X(pub[1]):
         USAGE("{}: <public-key> argument is not valid".format(public_key))
         return
 
@@ -1716,6 +1709,7 @@ def CMD_VERIFY(args):
 
     CLOSE_FILE(sig_input, i)
 
+    Q = PUBLIC_KEY_TO_POINT(pub)
     r = BYTES_TO_INT(r)
     s = BYTES_TO_INT(s)
 
@@ -1761,8 +1755,8 @@ def CMD_HELP():
 #
 ######################################################################
 
-DPK  = ""   # Default public key (blank means not set)
-DKK  = ""   # Default private key (blank means not set)
+DQK  = ""   # Default public key (blank means not set)
+DDK  = ""   # Default private key (blank means not set)
 DF   = ""   # Default file name (blank means not set)
 DDIR = ""   # Default Directory (blank means not set)
 
@@ -1804,22 +1798,26 @@ def READ_CONSOLE():
     return all_lines
 
 def MENU_CREATE():
-    global DPK
-    global DKK
+    global DQK
+    global DDK
 
-    keypair = CREATE()
-    DPK = ENCODE_KEY(keypair[0])
-    DKK = ENCODE_KEY(keypair[1])
-    PRINT("Public key:  {}\n".format(DPK))
-    PRINT("Private key: {}\n".format(DKK))
+    (Q, d) = CREATE()
+
+    pub = POINT_TO_PUBLIC_KEY(Q)
+    priv = INT_TO_PRIVATE_KEY(d)
+
+    DQK = ENCODE_KEY(pub)
+    DDK = ENCODE_KEY(priv)
+    PRINT("Public key:  {}\n".format(DQK))
+    PRINT("Private key: {}\n".format(DDK))
     return False
 
 def MENU_ENCRYPT():
-    global DPK
+    global DQK
     global DF
 
     PRINT_CWD()
-    public_key = INPUT_WITH_DEFAULT("Enter public key", DPK)
+    public_key = INPUT_WITH_DEFAULT("Enter public key", DQK)
     if public_key == None:
         return True
 
@@ -1828,9 +1826,9 @@ def MENU_ENCRYPT():
         REPORT_ERROR("Error entering public key '{}': {}.".format(public_key, rc))
         return False
 
-    Q = DECODE_KEY(public_key)
+    pub = DECODE_KEY(public_key)
 
-    if not VALID_CURVE_X(Q[0]):
+    if not VALID_CURVE_X(pub[1]):
         REPORT_ERROR("Error entering public key '{}' is not valid.".format(public_key))
         return False
 
@@ -1860,6 +1858,8 @@ def MENU_ENCRYPT():
 
     o = OPEN_FILE(output_file, WRITE_TEXT)
 
+    Q = PUBLIC_KEY_TO_POINT(pub)
+
     rc = ENCRYPT(Q, i, o)
 
     CLOSE_FILE(input_file, i)
@@ -1867,7 +1867,7 @@ def MENU_ENCRYPT():
 
     if rc == None:
         PRINT("Encrypted the file \"{}\". Output written to \"{}\".\n".format(input_file, output_file))
-        DPK = public_key
+        DQK = public_key
         DF = output_file
     else:
         REPORT_ERROR("Error encrypting file '{}': {}.".format(input_file, rc))
@@ -1875,11 +1875,11 @@ def MENU_ENCRYPT():
     return False
 
 def MENU_DECRYPT():
-    global DKK
+    global DDK
     global DF
 
     PRINT_CWD()
-    private_key = INPUT_WITH_DEFAULT("Enter private key", DKK)
+    private_key = INPUT_WITH_DEFAULT("Enter private key", DDK)
     if private_key == None:
         return True
 
@@ -1888,9 +1888,9 @@ def MENU_DECRYPT():
         REPORT_ERROR("Error entering private key '{}' {}.".format(private_key, rc))
         return False
 
-    d = DECODE_KEY(private_key)
+    priv = DECODE_KEY(private_key)
 
-    if not VALID_SCALAR(d[0]):
+    if not VALID_SCALAR(priv[0]):
         REPORT_ERROR("encrypt: private key '{}' invalid scalar".format(private_key))
 
     input_file = INPUT_WITH_DEFAULT("Enter file to decrypt", DF)
@@ -1919,6 +1919,8 @@ def MENU_DECRYPT():
 
     o = OPEN_FILE(output_file, WRITE_BINARY)
 
+    d = PRIVATE_KEY_TO_INT(priv)
+
     rc = DECRYPT(d, i, o)
 
     CLOSE_FILE(input_file, i)
@@ -1926,7 +1928,7 @@ def MENU_DECRYPT():
 
     if rc == None:
         PRINT("Decrypted the file \"{}\". Output written to \"{}\".\n".format(input_file, output_file))
-        DKK = private_key
+        DDK = private_key
         DF = output_file
     else:
         REPORT_ERROR("Error decrypting file '{}': {}.".format(input_file, rc))
@@ -1934,11 +1936,11 @@ def MENU_DECRYPT():
     return False
 
 def MENU_SIGN():
-    global DKK
+    global DDK
     global DF
 
     PRINT_CWD()
-    private_key = INPUT_WITH_DEFAULT("Enter private key", DKK)
+    private_key = INPUT_WITH_DEFAULT("Enter private key", DDK)
     if private_key == None:
         return True
 
@@ -1947,9 +1949,9 @@ def MENU_SIGN():
         REPORT_ERROR("Error entering private key '{}' {}.".format(private_key, rc))
         return False
 
-    d = DECODE_KEY(private_key)
+    priv = DECODE_KEY(private_key)
 
-    if not VALID_SCALAR(d[1]):
+    if not VALID_SCALAR(priv[1]):
         REPORT_ERROR("Error entering private key '{}' invalid scalar.".format(private_key))
         return False
 
@@ -1985,6 +1987,8 @@ def MENU_SIGN():
         REPORT_ERROR("Error entering signature file '{}' {}.".format(sig_output, rc))
         return False
 
+    d = PRIVATE_KEY_TO_INT(priv)
+
     (r, s) = SIGN(d, e)
 
     o = OPEN_FILE(sig_output, WRITE_TEXT)
@@ -2000,7 +2004,7 @@ def MENU_SIGN():
         PRINT("Created a signature for the file \"{}\". Output written to \"{}\".\n".format(input_file, sig_output))
 
     DF = sig_output
-    DKK = private_key
+    DDK = private_key
     return False
 
 def PRINT_GOOD(sig_input, input_file, e):
@@ -2024,11 +2028,11 @@ def PRINT_BAD(sig_input, input_file, e):
         PRINT(" {}\n".format( ENCODE_HASHCODE(e) ))
 
 def MENU_VERIFY():
-    global DPK
+    global DQK
     global DF
 
     PRINT_CWD()
-    public_key = INPUT_WITH_DEFAULT("Enter public key", DPK)
+    public_key = INPUT_WITH_DEFAULT("Enter public key", DQK)
     if public_key == None:
         return True
 
@@ -2037,9 +2041,9 @@ def MENU_VERIFY():
         REPORT_ERROR("Error entering public key '{}': {}.".format(public_key, rc))
         return False
 
-    Q = DECODE_KEY(public_key)
+    pub = DECODE_KEY(public_key)
 
-    if not VALID_CURVE_X(Q[0]):
+    if not VALID_CURVE_X(pub[1]):
         REPORT_ERROR("Error entering public key '{}': not valid.".format(public_key))
         return False
 
@@ -2099,6 +2103,7 @@ def MENU_VERIFY():
 
     CLOSE_FILE(sig_input, i)
 
+    Q = PUBLIC_KEY_TO_POINT(pub)
     r = BYTES_TO_INT(r)
     s = BYTES_TO_INT(s)
 
@@ -2110,7 +2115,7 @@ def MENU_VERIFY():
         PRINT_BAD(sig_input, input_file, e)
 
     DF = input_file
-    DPK = public_key
+    DQK = public_key
 
     return False
 
