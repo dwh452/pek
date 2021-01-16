@@ -1081,7 +1081,9 @@ def SOLVE(x):
 
 def VALID_CURVE_X(x):
     try:
-        SOLVE(x)
+        (y1, y2) = SOLVE(x)
+        S256Point(x, y1)
+        S256Point(x, y2)
     except:
         return False
     return True
@@ -1355,7 +1357,6 @@ def CHECK_PRIVATE_KEY(str):
 def PUBLIC_KEY_TO_POINT(key):
     (key_type, data) = key
     x = data
-
     if not VALID_CURVE_X(x):
         return S256Point(None, None)
 
@@ -1376,6 +1377,8 @@ def POINT_TO_PUBLIC_KEY(Q):
 
 def PRIVATE_KEY_TO_INT(d):
     (key_type, data) = d
+    if not VALID_SCALAR(data):
+        return None
     return data
 
 def INT_TO_PRIVATE_KEY(x):
@@ -1634,7 +1637,6 @@ def CMD_SIGN(args):
         if rc != None:
             USAGE("{}: {}".format(input_file, rc))
             return
-
         i = OPEN_FILE(input_file, READ_BINARY)
         e = SHA256(i)
         CLOSE_FILE(input_file, i)
@@ -1675,13 +1677,7 @@ def CMD_VERIFY(args):
         if rc != None:
             USAGE("{}: {}".format(input_file, rc))
             return False
-
-        if input_file == "-":
-            all_lines = READ_CONSOLE()
-            i = io.BytesIO(bytes(all_lines, 'utf-8'))
-        else:
-            i = OPEN_FILE(input_file, READ_BINARY)
-
+        i = OPEN_FILE(input_file, READ_BINARY)
         e = SHA256(i)
         CLOSE_FILE(input_file, i)
 

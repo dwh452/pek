@@ -3,6 +3,10 @@
 echo Testing BEGIN.
 date
 
+T1=/tmp/qt$$_1.txt
+T2=/tmp/qt$$_2.txt
+T3=/tmp/qt$$_3.txt
+
 #
 # This command will execute two commands like the following:
 #
@@ -44,8 +48,6 @@ fi
 #
 # this tests a longer message. check using this script itself
 #
-T3=/tmp/qt$$_3.txt
-
 ./pek encrypt $PUBLIC_KEY qt.sh - | ./pek decrypt $PRIVATE_KEY - $T3
 diff -q qt.sh $T3 > /dev/null
 
@@ -70,9 +72,6 @@ fi
 #
 `./pek create | awk '{ T = (NR==1) ? "PUBLIC" : "PRIVATE";  print "export " T "_KEY=" $3 }'`
 
-T1=/tmp/qt$$_1.txt
-T2=/tmp/qt$$_2.txt
-
 echo 'dwh Not Gonna Take It Anymore' | ./pek encrypt $PUBLIC_KEY - - | tee $T1 | ./pek decrypt $PRIVATE_KEY - - | grep -q 'dwh Not Gonna Take It Anymore'
 
 if [ $? -eq 0 ]; then
@@ -95,6 +94,62 @@ if [ $? -eq 0 ]; then
 	echo 7 fail
 else
 	echo '7 success (only valid if 5 and 6 were also successful)'
+fi
+
+
+
+#
+# Sign / Verify
+#
+echo 'HelloTest' | ./pek sign $PRIVATE_KEY - - > $T1
+echo 'HelloTest' | ./pek verify $PUBLIC_KEY - $T1 > $T2
+grep -q GOOD $T2
+
+if [ $? -eq 0 ]; then
+	echo 8 success
+else
+	echo 9 fail
+fi
+
+echo 'HelloTest' | ./pek sign $PRIVATE_KEY - - > $T1
+echo 'HelloTestX' | ./pek verify $PUBLIC_KEY - $T1 > $T2
+grep -q BAD $T2
+
+if [ $? -eq 0 ]; then
+	echo 9 success
+else
+	echo 9 fail
+fi
+
+echo 'HelloTest' | ./pek sign $PRIVATE_KEY - - | tr abc1 ABC0 > $T1
+echo 'HelloTest' | ./pek verify $PUBLIC_KEY - $T1 > $T2
+grep -q BAD $T2
+
+if [ $? -eq 0 ]; then
+	echo 10 success
+else
+	# could fail is no 'o' in signature
+	echo 10 fail
+fi
+
+OLD_PUB=$PUBLIC_KEY
+OLD_PRIV=$PRIVATE_KEY
+#
+# This command will execute two commands like the following:
+#
+# export PUBLIC_KEY=DKBrVBbcJ7gX4l5plb1Q9Vio4E3ZQEMu9MP1h6WpGx8
+# export PRIVATE_KEY=n8mRji1by28lxKOuMseXTUGVAQqPHEPQ9Kytmy1TSo0
+#
+`./pek create | awk '{ T = (NR==1) ? "PUBLIC" : "PRIVATE";  print "export " T "_KEY=" $3 }'`
+
+echo 'HelloTest' | ./pek sign $OLD_PRIV - - > $T1
+echo 'HelloTest' | ./pek verify $PUBLIC_KEY - $T1 > $T2
+grep -q BAD $T2
+
+if [ $? -eq 0 ]; then
+	echo 11 success
+else
+	echo 11 fail
 fi
 
 ######################################################################
