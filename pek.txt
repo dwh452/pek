@@ -1328,10 +1328,10 @@ def CHECK_PUBLIC_KEY(str):
     t = CHAR_TO_KEY_TYPE(last_char)
 
     if t == InvalidKey:
-        return "is not a public key, (marked invalid)"
+        return "is invalid"
 
     if t == PrivateKey:
-        return "is not a public key (marked private)"
+        return "is not a public key (it is a private key)"
 
     return None
 
@@ -1347,10 +1347,10 @@ def CHECK_PRIVATE_KEY(str):
     t = CHAR_TO_KEY_TYPE(last_char)
 
     if t == InvalidKey:
-        return "is not a private key, (marked invalid)"
+        return "is invalid"
 
     if t == PublicKeyEvenY or t == PublicKeyOddY:
-        return "is not a private key (marked public)"
+        return "is not a private key (it is a public key)"
 
     return None
 
