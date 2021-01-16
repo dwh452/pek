@@ -1191,7 +1191,7 @@ def DECRYPT(d, i, o):
     if len(E) != 33:
         return "decoding error. ephemeral public key len={} != 33".format(len(E))
     E = BYTES_TO_POINT(E)
-    if E.x.num == None:
+    if E.x == None:
         return "decoding error: ephemeral public key is not valid"
     ED = SCALE_POINT(E, d)
     sk = HASH_POINT(ED)
@@ -1355,6 +1355,9 @@ def CHECK_PRIVATE_KEY(str):
 def PUBLIC_KEY_TO_POINT(key):
     (key_type, data) = key
     x = data
+
+    if not VALID_CURVE_X(x):
+        return S256Point(None, None)
 
     (y1, y2) = SOLVE(x)
 
@@ -1543,12 +1546,10 @@ def CMD_ENCRYPT(args):
     i = OPEN_FILE(input_file, READ_BINARY)
     o = OPEN_FILE(output_file, WRITE_TEXT)
     pub = DECODE_KEY(public_key)
-
-    if not VALID_CURVE_X(pub[1]):
+    Q = PUBLIC_KEY_TO_POINT(pub)
+    if Q.x == None:
         USAGE("{}: <public-key> argument is not valid".format(public_key))
         return
-
-    Q = PUBLIC_KEY_TO_POINT(pub)
 
     rc = ENCRYPT(Q, i, o)
 
@@ -1662,8 +1663,8 @@ def CMD_VERIFY(args):
         return
 
     pub = DECODE_KEY(public_key)
-
-    if not VALID_CURVE_X(pub[1]):
+    Q = PUBLIC_KEY_TO_POINT(pub)
+    if Q.x == None:
         USAGE("{}: <public-key> argument is not valid".format(public_key))
         return
 
@@ -1708,7 +1709,6 @@ def CMD_VERIFY(args):
 
     CLOSE_FILE(sig_input, i)
 
-    Q = PUBLIC_KEY_TO_POINT(pub)
     r = BYTES_TO_INT(r)
     s = BYTES_TO_INT(s)
 
@@ -1826,8 +1826,8 @@ def MENU_ENCRYPT():
         return False
 
     pub = DECODE_KEY(public_key)
-
-    if not VALID_CURVE_X(pub[1]):
+    Q = PUBLIC_KEY_TO_POINT(pub)
+    if Q.x.num == None:
         REPORT_ERROR("Error entering public key '{}' is not valid.".format(public_key))
         return False
 
@@ -1856,8 +1856,6 @@ def MENU_ENCRYPT():
         i = OPEN_FILE(input_file, READ_BINARY)
 
     o = OPEN_FILE(output_file, WRITE_TEXT)
-
-    Q = PUBLIC_KEY_TO_POINT(pub)
 
     rc = ENCRYPT(Q, i, o)
 
@@ -2037,8 +2035,8 @@ def MENU_VERIFY():
         return False
 
     pub = DECODE_KEY(public_key)
-
-    if not VALID_CURVE_X(pub[1]):
+    Q = PUBLIC_KEY_TO_POINT(pub)
+    if Q.x == None:
         REPORT_ERROR("Error entering public key '{}': not valid.".format(public_key))
         return False
 
@@ -2098,7 +2096,6 @@ def MENU_VERIFY():
 
     CLOSE_FILE(sig_input, i)
 
-    Q = PUBLIC_KEY_TO_POINT(pub)
     r = BYTES_TO_INT(r)
     s = BYTES_TO_INT(s)
 
