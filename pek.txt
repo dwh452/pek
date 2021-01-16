@@ -3,8 +3,8 @@
 ######################################################################
 #
 # pek is a command to encrypt and decrypt files using public/private keys.
-# As a secondary feature pek can also generate digital signatures.
-# Written for python3.
+# A secondary feature of pek is signing and verifying files using digital signatures.
+# Written for python 3.
 #
 # This program has been designed to be an easy-to-install and simple-to-use tool
 # for exchanging small encrypted messages via email. The encrypted output was designed to
@@ -14,24 +14,33 @@
 #
 # Synopsis:
 #    C:\> PEK CREATE
-#    Public key:  BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4
-#    Private key: L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw
+#    Public key:  HDiIVl7zm5prDw9CjsGwFagO5iR/+d4WKljeLbWiVWK
+#    Private key: UczjINLL6k318mjZOAF83XHiqHJERkb2vrUd7YLbOyl
 #
-#    C:\> PEK ENCRYPT BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4 C:\AUTOEXEC.BAT SECRET.PEK
+#    C:\> PEK ENCRYPT HDiIVl7zm5prDw9CjsGwFagO5iR/+d4WKljeLbWiVWK C:\AUTOEXEC.BAT SECRET.PEK
 #
 #    C:\> TYPE SECRET.PEK
-#    F71PzRXjySUtOtsvDv4xf+Xso/FYJ8BLXloVS9pez3ra5gMtxAOyYNIQNiURCL
-#    5gdyHHN0+R83hvcBSO9qU5AbDbtfRE5SbxaBuf5Va8kGinT2ye194FSEHzrOW6q
-#    1cIfcloKz1Z+Fj4qeqqtw1HBhc+U8u+fObWT7WIo3cKXEGAtCnZ0anrdc5ZRR8k
-#    +raIU8RQcatFmAXpMUTX9xXzg3MTKyNSs5pfx/XLhD3qr0dSphECpzl6GGvOy1
-#    1mu6Gr
+#    qAqk2x6H73km+5egvwik+vKUcMgwrSFV5WRyNA0LBwEDFJIygBdlKOOX4KIOdw
+#    Khui6zxb4IzjW+smFqkjVNn2Ng8nhYes4+YK6ucTGO/DBHX6jKUVuckN9aiC+es
+#    B4n0YOb53JeSzrXMa3Cw2+Dtv3CCrSTnQPu5h/9ylx1gP8/CIYi3rgTc2qygnOJ
+#    csHU8/zdZKgEu5i/wr98uTQrMelQIBsSUyBVYHTSnVoBOjRwxlhxJxWQsw9cdw
+#    E4J+JnRg
 #
-#    C:\> PEK DECRYPT L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw SECRET.PEK -
+#    C:\> PEK DECRYPT UczjINLL6k318mjZOAF83XHiqHJERkb2vrUd7YLbOyl SECRET.PEK -
 #    @echo off
 #    SET SOUND=C:\PROGRA~1\CREATIVE\CTSND
 #    SET BLASTER=A220 I5 D1 H5 P330 E620 T6
-#    SET PATH=C:\Windows;C:\
+#    SET PATH=C:\Windows,C:\
 #    LH C:\Windows\COMMAND\MSCDEX.EXE /D:123
+#
+#    C:\> PEK SIGN UczjINLL6k318mjZOAF83XHiqHJERkb2vrUd7YLbOyl C:\AUTOEXEC.BAT A.SIG
+#
+#    C:\> TYPE A.SIG
+#    rnl+t/pN5lOE7ZsUJjdEc8utQHrhqgLzLVkksu2EXlmC8jbrRnGt7k1xw6lJYQ
+#    QveDNKUx7rzYHLxTq71oj/pA
+#
+#    C:\> PEK VERIFY HDiIVl7zm5prDw9CjsGwFagO5iR/+d4WKljeLbWiVWK C:\AUTOEXEC.BAT A.SIG
+#    GOOD
 #
 #    C:\> PEK
 #    1) Create Keys
@@ -47,6 +56,7 @@
 #    C:\> 
 #
 # Encryption / Decryption:
+#
 # The private key is a random 256-bit value (represented by the variable 'd').
 # The public key is the secp256k1 generator point multiplied by the private key (represented by the variable 'Q').
 #
@@ -55,7 +65,10 @@
 # produced (represented by 'e' and 'E'). The public ephemeral key is included in the encrypted output so
 # that that the decryption algorithm can derive the shared key 'sk'.
 #
-# Once the shared key is obtained the plaintext is encrypted with it using AES 128 (Advanced
+# SHA256 is applied to the elliptic curve point to get the 256-bit key 'sk' used for
+# the AES encryption and decryption. (See the function HASH_POINT())
+#
+# Once the shared key is obtained the plaintext is encrypted with it using AES-128 (Advanced
 # Encryption Standard). Cipher block chaining (CBC) is employed. The initialization vector is the shared key 'sk'.
 #
 # This AES implementation operates on 128-bit blocks (it does use a 256-bit key).
@@ -64,15 +77,25 @@
 #
 # The public and private keys are represented by a 43-character BASE64 encoded string.
 #
+# All 258-bits of this 43-character string are used. The first 256-bits are the private
+# key or public key. To encode a public key one more bit is needed to indicate
+# if the y coordinate is even/odd. To capture this information the next and final two
+# bits are used as follows:
+#   00  Invalid.
+#   01  This is a private key.
+#   10  This is a public key, the y-coordinate is even.
+#   11  This is a public key, the y-coordinate is odd.
+#
 # The encrypted file format is a stream of BASE64 characters with allowance
-# for whitespace appearing anywhere. The first 32-bytes are the the public ephemeral key.
+# for whitespace appearing anywhere. The first 33-bytes are the the public ephemeral key.
 # The remaining data is the encrypted form of the plaintext.
 #
 # Signing / Verification:
+#
 # The ECDSA (Elliptic Curve Digital Signature Algorithm) is used.
 # The 256-bit hash code is calculated using SHA256.
 # See the SIGN() and VERIFY() functions. The hash code is represented by the variable 'e'.
-# The signature file format is 512-bits of BASE64 characters representing the tuple (r, s).
+# The signature file format consists of 512-bits of BASE64 characters representing the tuple (r, s).
 #
 # This program contains code from these other projects:
 #   Elliptic Curve   Jimmy Song, https://github.com/jimmysong/programmingbitcoin.git
@@ -1475,19 +1498,15 @@ Usage:
 
 Examples:
     $ pek create
-    Public key:  UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4
-    Private key: lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk
+    Public key:  9ypjamC46AgSmFQtTfS9gxFPzIqz2TRpXT2kczCNDyK
+    Private key: m8G/I3s9Qc2KT1w8iT/IhtPNUfVmJbzkBUM0ewkGkTt
 
-    $ pek encrypt UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 f1.txt f1.pek
-    $ pek decrypt lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk f1.pek original.txt
+    $ pek encrypt 9ypjamC46AgSmFQtTfS9gxFPzIqz2TRpXT2kczCNDyK f1.txt f1.pek
+    $ pek decrypt m8G/I3s9Qc2KT1w8iT/IhtPNUfVmJbzkBUM0ewkGkTt f1.pek original.txt
 
-    $ pek sign    lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk MANIFESTO.doc  MANIFESTO.sig
-    $ pek verify  UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 MANIFESTO.doc  MANIFESTO.sig
+    $ pek sign    m8G/I3s9Qc2KT1w8iT/IhtPNUfVmJbzkBUM0ewkGkTt MANIFESTO.doc  MANIFESTO.sig
+    $ pek verify  9ypjamC46AgSmFQtTfS9gxFPzIqz2TRpXT2kczCNDyK MANIFESTO.doc  MANIFESTO.sig
     GOOD
-
-    $ cat MANIFESTO.sig
-    e2WmynGK6eYwN5pTSW8wQYV8/CfC9q1lUE3O6qYCPhydLZE3kXxWvSNPVQQ5Q3
-    9j9dunCDcbc+FoYa5PuZmKEQ
 
     $ shasum -a 256 MANIFESTO.doc
     6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b
@@ -1712,15 +1731,15 @@ def CMD_HELP():
     USAGE("")
     PRINT("""\
   C:\> pek create
-  Public key:  BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4
-  Private key: L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw
+  Public key:  HFpMb+pWfyB7LXqepl3cRcbSW/6kgEUDT8hZ5iyuF9u
+  Private key: 94PHU/PoN++CvWrguXQSTNOaq0rBH1geUJHPd0oCrbR
 
-  C:\> pek encrypt BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4 f1.txt f2.pek
-  C:\> pek decrypt L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw f2.pek f3.txt
+  C:\> pek encrypt HFpMb+pWfyB7LXqepl3cRcbSW/6kgEUDT8hZ5iyuF9u f1.txt f2.pek
+  C:\> pek decrypt 94PHU/PoN++CvWrguXQSTNOaq0rBH1geUJHPd0oCrbR f2.pek f3.txt
       The files f1.txt and f3.txt will be the same.
 
-  C:\> pek sign L9q3va61OaoSVQpQXvN/cajGpaoV0vmdCYpHC3JRYEw f1.txt f1.sig
-  C:\> pek verify BfmFN9jG20aH44zyKxsdybJ1LmTRVO9wfbgoRxUU9v4 f1.txt f1.sig
+  C:\> pek sign 94PHU/PoN++CvWrguXQSTNOaq0rBH1geUJHPd0oCrbR f1.txt f1.sig
+  C:\> pek verify HFpMb+pWfyB7LXqepl3cRcbSW/6kgEUDT8hZ5iyuF9u f1.txt f1.sig
   GOOD
       Only the private key holder can create a good signature.
 
