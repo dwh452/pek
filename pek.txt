@@ -1352,7 +1352,6 @@ def CHECK_PRIVATE_KEY(str):
 
     return None
 
-######################################################################  KJS BEGIN
 def PUBLIC_KEY_TO_POINT(key):
     (key_type, data) = key
     x = data
@@ -1378,7 +1377,6 @@ def PRIVATE_KEY_TO_INT(d):
 
 def INT_TO_PRIVATE_KEY(x):
     return (PrivateKey, x)
-######################################################################  KJS END
 
 def IS_HASHCODE(str):
     if len(str) != 64:
@@ -1575,6 +1573,12 @@ def CMD_DECRYPT(args):
         USAGE("{}: <private-key> argument {}".format(private_key, rc))
         return
 
+    priv = DECODE_KEY(private_key)
+    d = PRIVATE_KEY_TO_INT(priv)
+    if not VALID_SCALAR(d):
+        USAGE("{}: <private-key> argument invalid scalar".format(private_key))
+        return
+
     rc = CHECK_INPUT(input_file)
     if rc != None:
         USAGE("{}: {}".format(input_file, rc))
@@ -1585,16 +1589,8 @@ def CMD_DECRYPT(args):
         USAGE("{}: {}".format(output_file, rc))
         return
 
-    priv = DECODE_KEY(private_key)
-
-    if not VALID_SCALAR(priv[1]):
-        USAGE("{}: <private-key> argument invalid scalar".format(private_key))
-        return
-
     i = OPEN_FILE(input_file, READ_TEXT)
     o = OPEN_FILE(output_file, WRITE_BINARY)
-
-    d = PRIVATE_KEY_TO_INT(priv)
 
     rc = DECRYPT(d, i, o)
 
@@ -1625,8 +1621,8 @@ def CMD_SIGN(args):
         return
 
     priv = DECODE_KEY(private_key)
-
-    if not VALID_SCALAR(priv[1]):
+    d = PRIVATE_KEY_TO_INT(priv)
+    if not VALID_SCALAR(d):
         USAGE("{}: <private-key> argument invalid scalar".format(private_key))
         return
 
@@ -1641,8 +1637,6 @@ def CMD_SIGN(args):
         i = OPEN_FILE(input_file, READ_BINARY)
         e = SHA256(i)
         CLOSE_FILE(input_file, i)
-
-    d = PRIVATE_KEY_TO_INT(priv)
 
     (r, s) = SIGN(d, e)
 
@@ -1894,8 +1888,8 @@ def MENU_DECRYPT():
         return False
 
     priv = DECODE_KEY(private_key)
-
-    if not VALID_SCALAR(priv[0]):
+    d = PRIVATE_KEY_TO_INT(priv)
+    if not VALID_SCALAR(d):
         REPORT_ERROR("encrypt: private key '{}' invalid scalar".format(private_key))
 
     input_file = INPUT_WITH_DEFAULT("Enter file to decrypt", DF)
@@ -1923,8 +1917,6 @@ def MENU_DECRYPT():
         i = OPEN_FILE(input_file, READ_TEXT)
 
     o = OPEN_FILE(output_file, WRITE_BINARY)
-
-    d = PRIVATE_KEY_TO_INT(priv)
 
     rc = DECRYPT(d, i, o)
 
@@ -1955,8 +1947,8 @@ def MENU_SIGN():
         return False
 
     priv = DECODE_KEY(private_key)
-
-    if not VALID_SCALAR(priv[1]):
+    d = PRIVATE_KEY_TO_INT(priv)
+    if not VALID_SCALAR(d):
         REPORT_ERROR("Error entering private key '{}' invalid scalar.".format(private_key))
         return False
 
@@ -1991,8 +1983,6 @@ def MENU_SIGN():
     if rc != None:
         REPORT_ERROR("Error entering signature file '{}' {}.".format(sig_output, rc))
         return False
-
-    d = PRIVATE_KEY_TO_INT(priv)
 
     (r, s) = SIGN(d, e)
 
