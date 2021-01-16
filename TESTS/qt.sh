@@ -27,9 +27,6 @@ else
 	echo 2 success
 fi
 
-echo 'The next command will generate an error message. That is expected. If no error message appears, then something is broken:'
-echo 'dwh Not Gonna Take It Anymore' | ./pek encrypt $PRIVTE_KEY - - | ./pek decrypt $PUBLIC_KEY - - | grep -q 'dwh Not Gonna Take It Anymore'
-
 PUBLIC_KEY=Pvf2ZHZWoLa1uVn12JxmFpl+SjKKrv39xVoHClXxRer
 PRIVATE_KEY=Tr9+E2bmaWPQm8Q9/uOzV7STWwAsZBkbaNepQFeRnrF
 

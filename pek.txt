@@ -1067,31 +1067,6 @@ def XOR(mask, data):
     for i in range(len(data)):
         data[i] = data[i] ^ mask[i]
 
-def INT_TO_BYTES(value, length):
-    return bytearray( value.to_bytes(length, 'big') )
-
-def BYTES_TO_INT(bytes):
-    return int.from_bytes(bytes, 'big')
-
-def POINT_TO_BYTES(P):
-    i = (P.x.num * 256) + (2 if P.y.num % 2 == 0 else 3)
-    bytes = INT_TO_BYTES(i, 33)
-    return bytes
-
-def BYTES_TO_POINT(bytes):
-    if len(bytes) != 33:
-        return S256Point(None, None)
-    data = BYTES_TO_INT(bytes)
-    x = data // 256
-    if not VALID_CURVE_X(x):
-        return S256Point(None, None)
-    (y1, y2) = SOLVE(x)
-    if data % 256 == 2:
-        y = y1
-    else:
-        y = y2
-    return S256Point(x, y)
-
 def SOLVE(x):
     #
     # solve for (+y, -y):  y^2 = x^3 + a * x + b
@@ -1113,6 +1088,36 @@ def VALID_CURVE_X(x):
 
 def VALID_SCALAR(scalar):
     return scalar >= 1 and scalar <= N-1
+
+def INT_TO_BYTES(value, length):
+    return bytearray( value.to_bytes(length, 'big') )
+
+def BYTES_TO_INT(bytes):
+    return int.from_bytes(bytes, 'big')
+
+def POINT_TO_BYTES(P):
+    x = P.x.num
+    t = (2 if P.y.num % 2 == 0 else 3)
+    i = (x * 256) + t
+    bytes = INT_TO_BYTES(i, 33)
+    return bytes
+
+def BYTES_TO_POINT(bytes):
+    if len(bytes) != 33:
+        return S256Point(None, None)
+    data = BYTES_TO_INT(bytes)
+    x = data // 256
+    if not VALID_CURVE_X(x):
+        return S256Point(None, None)
+    t = data % 256
+    if t != 2 and t != 3:
+        return S256Point(None, None)
+    (y1, y2) = SOLVE(x)
+    if t == 2:
+        y = y1
+    else:
+        y = y2
+    return S256Point(x, y)
 
 def SCALE_POINT(P, scalar):
     return scalar * P
