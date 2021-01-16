@@ -1375,13 +1375,13 @@ def POINT_TO_PUBLIC_KEY(Q):
     data = Q.x.num
     return (key_type, data)
 
-def PRIVATE_KEY_TO_INT(d):
+def PRIVATE_KEY_TO_SCALAR(d):
     (key_type, data) = d
     if not VALID_SCALAR(data):
         return None
     return data
 
-def INT_TO_PRIVATE_KEY(x):
+def SCALAR_TO_PRIVATE_KEY(x):
     return (PrivateKey, x)
 
 def IS_HASHCODE(str):
@@ -1517,7 +1517,7 @@ def CMD_CREATE(args):
     (Q, d) = CREATE()
 
     pub = POINT_TO_PUBLIC_KEY(Q)
-    priv = INT_TO_PRIVATE_KEY(d)
+    priv = SCALAR_TO_PRIVATE_KEY(d)
 
     PRINT("Public key:  {}\n".format( ENCODE_KEY(pub) ))
     PRINT("Private key: {}\n".format( ENCODE_KEY(priv) ))
@@ -1578,8 +1578,8 @@ def CMD_DECRYPT(args):
         return
 
     priv = DECODE_KEY(private_key)
-    d = PRIVATE_KEY_TO_INT(priv)
-    if not VALID_SCALAR(d):
+    d = PRIVATE_KEY_TO_SCALAR(priv)
+    if d == None:
         USAGE("{}: <private-key> argument invalid scalar".format(private_key))
         return
 
@@ -1625,8 +1625,8 @@ def CMD_SIGN(args):
         return
 
     priv = DECODE_KEY(private_key)
-    d = PRIVATE_KEY_TO_INT(priv)
-    if not VALID_SCALAR(d):
+    d = PRIVATE_KEY_TO_SCALAR(priv)
+    if d == None:
         USAGE("{}: <private-key> argument invalid scalar".format(private_key))
         return
 
@@ -1882,8 +1882,8 @@ def MENU_DECRYPT():
         return False
 
     priv = DECODE_KEY(private_key)
-    d = PRIVATE_KEY_TO_INT(priv)
-    if not VALID_SCALAR(d):
+    d = PRIVATE_KEY_TO_SCALAR(priv)
+    if d == None:
         REPORT_ERROR("encrypt: private key '{}' invalid scalar".format(private_key))
 
     input_file = INPUT_WITH_DEFAULT("Enter file to decrypt", DF)
@@ -1941,8 +1941,8 @@ def MENU_SIGN():
         return False
 
     priv = DECODE_KEY(private_key)
-    d = PRIVATE_KEY_TO_INT(priv)
-    if not VALID_SCALAR(d):
+    d = PRIVATE_KEY_TO_SCALAR(priv)
+    if d == None:
         REPORT_ERROR("Error entering private key '{}' invalid scalar.".format(private_key))
         return False
 

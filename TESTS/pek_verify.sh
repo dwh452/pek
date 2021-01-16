@@ -208,13 +208,13 @@ def TEST():
 	TP = PUBLIC_KEY_TO_POINT(key)
 	print("Test 19.4", TP)
 	
-	###### PRIVATE_KEY_TO_INT / INT_TO_PRIVATE_KEY
+	###### PRIVATE_KEY_TO_SCALAR / SCALAR_TO_PRIVATE_KEY
 	key = DECODE_KEY( "vBUmrCLRgO1XaVjjFSrlkpEM1/FyrG7Uw6FFK1nd0tV" )  # type 01
-	d = PRIVATE_KEY_TO_INT(key)
-	print("Test 20.1", d, INT_TO_PRIVATE_KEY(d))
+	d = PRIVATE_KEY_TO_SCALAR(key)
+	print("Test 20.1", d, SCALAR_TO_PRIVATE_KEY(d))
 
 	key = DECODE_KEY( "/////////////////////rqu3OavSKA7v9JekNA2QUB" )
-	d = PRIVATE_KEY_TO_INT(key)
+	d = PRIVATE_KEY_TO_SCALAR(key)
 	print("Test 20.2", d)
 
 	###### VALUE_CURVE_X / VALID_SCALAR
@@ -395,16 +395,16 @@ Test 16.1 (0, 984050235972492056835837467560513126451066887493292040615194723001
 Test 16.2 (1, 98405023597249205683583746756051312645106688749329204061519472300162631725305)
 Test 16.3 (2, 98405023597249205682309219302460946269091637217848733122447207198666388533497)
 Test 16.4 (3, 56926304901913396421504431988396528007164481852076221122497528748686637658361)
-Test 17.1 is not a public key, (marked invalid)
-Test 17.2 is not a public key (marked private)
+Test 17.1 is invalid
+Test 17.2 is not a public key (it is a private key)
 Test 17.3 None
 Test 17.4 None
 Test 17.5 must be exactly 43 characters long, not 46
 Test 17.6 '*' is not a base64 character
-Test 18.1 is not a private key, (marked invalid)
+Test 18.1 is invalid
 Test 18.2 None
-Test 18.3 is not a private key (marked public)
-Test 18.4 is not a private key (marked public)
+Test 18.3 is not a private key (it is a public key)
+Test 18.4 is not a private key (it is a public key)
 Test 18.5 must be exactly 43 characters long, not 46
 Test 18.6 '*' is not a base64 character
 Test 18.7 None
