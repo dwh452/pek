@@ -1,3 +1,9 @@
 First copy pek.txt into this directory and then rename it to 'pek'.
 'pek' needs to be executable, chmod u+x pek.
 This works for linux or mac.
+
+  mt.sh           menu tester
+  qt.sh           command line overall functionality tester
+  pek_verify.sh   unit tester
+  refresh.sh      updates the unit tests with the latest expected output
+
