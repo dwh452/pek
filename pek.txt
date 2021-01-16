@@ -76,7 +76,6 @@
 # (see AES_ENCRYPT() and AES_DECRYPT()).
 #
 # The public and private keys are represented by a 43-character BASE64 encoded string.
-#
 # All 258-bits of this 43-character string are used. The first 256-bits are the private
 # key or public key. To encode a public key one more bit is needed to indicate
 # if the y coordinate is even/odd. To capture this information the next and final two
