@@ -1620,15 +1620,15 @@ def CMD_SIGN(args):
         USAGE("{}: <private-key> argument {}".format(private_key, rc))
         return
 
-    rc = CHECK_OUTPUT(sig_output)
-    if rc != None:
-        USAGE("{}: {}".format(sig_output, rc))
-        return
-
     priv = DECODE_KEY(private_key)
     d = PRIVATE_KEY_TO_SCALAR(priv)
     if d == None:
         USAGE("{}: <private-key> argument invalid scalar".format(private_key))
+        return
+
+    rc = CHECK_OUTPUT(sig_output)
+    if rc != None:
+        USAGE("{}: {}".format(sig_output, rc))
         return
 
     if IS_HASHCODE(input_file):
