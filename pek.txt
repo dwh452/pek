@@ -1487,25 +1487,6 @@ Usage:
     <signature-out>  This is the signature filename to create, use "-" for standard output.
     <signature-in>   This is the signature filename to read, use "-" for standard input.
 
-Examples:
-    $ pek create
-    Public key:  9ypjamC46AgSmFQtTfS9gxFPzIqz2TRpXT2kczCNDyK
-    Private key: m8G/I3s9Qc2KT1w8iT/IhtPNUfVmJbzkBUM0ewkGkTt
-
-    $ pek encrypt 9ypjamC46AgSmFQtTfS9gxFPzIqz2TRpXT2kczCNDyK f1.txt f1.pek
-    $ pek decrypt m8G/I3s9Qc2KT1w8iT/IhtPNUfVmJbzkBUM0ewkGkTt f1.pek original.txt
-
-    $ pek sign    m8G/I3s9Qc2KT1w8iT/IhtPNUfVmJbzkBUM0ewkGkTt MANIFESTO.doc  MANIFESTO.sig
-    $ pek verify  9ypjamC46AgSmFQtTfS9gxFPzIqz2TRpXT2kczCNDyK MANIFESTO.doc  MANIFESTO.sig
-    GOOD
-
-    $ shasum -a 256 MANIFESTO.doc
-    6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b
-
-    $ pek sign   lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk 6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b MANIFESTO.sig
-    $ pek verify UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b MANIFESTO.sig
-    GOOD
-
 {}
 """.format(msg))
 
@@ -1719,6 +1700,25 @@ def CMD_VERIFY(args):
 def CMD_HELP():
     USAGE("")
     PRINT("""\
+Examples:
+    $ pek create
+    Public key:  9ypjamC46AgSmFQtTfS9gxFPzIqz2TRpXT2kczCNDyK
+    Private key: m8G/I3s9Qc2KT1w8iT/IhtPNUfVmJbzkBUM0ewkGkTt
+
+    $ pek encrypt 9ypjamC46AgSmFQtTfS9gxFPzIqz2TRpXT2kczCNDyK f1.txt f1.pek
+    $ pek decrypt m8G/I3s9Qc2KT1w8iT/IhtPNUfVmJbzkBUM0ewkGkTt f1.pek original.txt
+
+    $ pek sign    m8G/I3s9Qc2KT1w8iT/IhtPNUfVmJbzkBUM0ewkGkTt MANIFESTO.doc  MANIFESTO.sig
+    $ pek verify  9ypjamC46AgSmFQtTfS9gxFPzIqz2TRpXT2kczCNDyK MANIFESTO.doc  MANIFESTO.sig
+    GOOD
+
+    $ shasum -a 256 MANIFESTO.doc
+    6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b
+
+    $ pek sign   lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk 6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b MANIFESTO.sig
+    $ pek verify UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b MANIFESTO.sig
+    GOOD
+
   C:\> pek create
   Public key:  HFpMb+pWfyB7LXqepl3cRcbSW/6kgEUDT8hZ5iyuF9u
   Private key: 94PHU/PoN++CvWrguXQSTNOaq0rBH1geUJHPd0oCrbR
