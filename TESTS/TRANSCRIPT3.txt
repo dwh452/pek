@@ -1,0 +1,141 @@
+This is a transcript of running the PEK menu.
+
+When prompted for a filename you can enter "-" to tell
+the program to read from the keyboard. Similarly, when
+prompted for an output filename entering "-" will write
+the output to the screen.
+
+This transcript shows the use of "-". The other technique
+shown is to be able to copy and paste text from
+the terminal back into the terminal.
+
+This transcript show the use of default values when entering data.
+When a prompt includes text in square brackets. Such as,
+
+   Enter public key [ePYL36kZkBisW1lZpu8AUPltR+AouKy+Vj33Tc0Qs6j]: 
+
+This means you can press RETURN to accept this value without
+having to enter anything. Pek will remember what you have recently
+entered and use that next time.
+
+
+1) Create Keys
+2) Encrypt file
+3) Decrypt file
+4) Create Signature
+5) Verify Signature
+6) File Operations
+7) Help
+8) Quit
+Choose 1-8? 1
+
+Public key:  ePYL36kZkBisW1lZpu8AUPltR+AouKy+Vj33Tc0Qs6j
+Private key: znCiwvuKGMmyhn+GtXHGuV/RJOr0AjTDm05EUev2bhF
+
+1) Create Keys
+2) Encrypt file
+3) Decrypt file
+4) Create Signature
+5) Verify Signature
+6) File Operations
+7) Help
+8) Quit
+Choose 1-8? 2
+
+Current working directory: "C:\PythonFiles"
+Enter public key [ePYL36kZkBisW1lZpu8AUPltR+AouKy+Vj33Tc0Qs6j]: 
+Enter file to encrypt: -
+Enter output file: -
+Enter message (use '.' to finish):
+Hello this is the quickest way to encrypt a simple
+message like
+this one.
+cheerio, hangular
+.
+c6lil6y1X6n6kHwDbZZcPNtxX0DlnV29IaTTmdJ8yD4CspEVNFGP76FLbb6Pfq
+vaE67IJXSZTvv5BegF0/xWaxjStlislluXpBbYXqJVyyb3K7izEtB5tnj7KgmUj
+3Qgi5o/OyMsDpC0nYBOzr0CGocZQzUwZ2z1uyDyK6QoV7MP
+Encrypted the file "-". Output written to "-".
+
+1) Create Keys
+2) Encrypt file
+3) Decrypt file
+4) Create Signature
+5) Verify Signature
+6) File Operations
+7) Help
+8) Quit
+Choose 1-8? 3
+
+Current working directory: "C:\PythonFiles"
+Enter private key [znCiwvuKGMmyhn+GtXHGuV/RJOr0AjTDm05EUev2bhF]: 
+Enter file to decrypt [-]: 
+Enter output file: -
+Enter message (use '.' to finish):
+c6lil6y1X6n6kHwDbZZcPNtxX0DlnV29IaTTmdJ8yD4CspEVNFGP76FLbb6Pfq      <<<< COPY AND PASTED FROM ABOVE
+vaE67IJXSZTvv5BegF0/xWaxjStlislluXpBbYXqJVyyb3K7izEtB5tnj7KgmUj
+3Qgi5o/OyMsDpC0nYBOzr0CGocZQzUwZ2z1uyDyK6QoV7MP
+.
+Hello this is the quickest way to encrypt a simple
+message like
+this one.
+cheerio, hangular
+Decrypted the file "-". Output written to "-".
+
+1) Create Keys
+2) Encrypt file
+3) Decrypt file
+4) Create Signature
+5) Verify Signature
+6) File Operations
+7) Help
+8) Quit
+Choose 1-8? 4
+
+Current working directory: "C:\PythonFiles"
+Enter private key [znCiwvuKGMmyhn+GtXHGuV/RJOr0AjTDm05EUev2bhF]: 
+Enter file or hash code [-]: 
+Enter message (use '.' to finish):
+Doesn't make sense to verify from keyboard but you can use
+it to test the functionality.
+.
+The sha256 hash code to be signed is:
+ a2da073b96a76939bd82ba74496cef85f022155860b60efe0f268a75baadcb6a
+Enter signature file to output: -
+zkf0KXXDF/AjxpQEgzWDEntCngxoWL2jQ0HE9lrojcZjDPKKIU77ZWlNE163Qx
+AVVAgEm29LqJpvdhErr6V00g
+Created a signature for the file "-". Output written to "-".
+
+1) Create Keys
+2) Encrypt file
+3) Decrypt file
+4) Create Signature
+5) Verify Signature
+6) File Operations
+7) Help
+8) Quit
+Choose 1-8? 5
+
+Current working directory: "C:\PythonFiles"
+Enter public key [ePYL36kZkBisW1lZpu8AUPltR+AouKy+Vj33Tc0Qs6j]: 
+Enter file or hash code [-]: a2da073b96a76939bd82ba74496cef85f022155860b60efe0f268a75baadcb6a    <<<< COPY AND PASTED FROM ABOVE
+The sha256 hash code to be verified is:
+ a2da073b96a76939bd82ba74496cef85f022155860b60efe0f268a75baadcb6a
+Enter signature file: -
+Enter message (use '.' to finish):
+zkf0KXXDF/AjxpQEgzWDEntCngxoWL2jQ0HE9lrojcZjDPKKIU77ZWlNE163Qx                <<<< COPY AND PASTED FROM ABOVE
+AVVAgEm29LqJpvdhErr6V00g
+.
+GOOD
+The file "-" contains a valid signature for the sha256 hash code:
+ a2da073b96a76939bd82ba74496cef85f022155860b60efe0f268a75baadcb6a
+
+1) Create Keys
+2) Encrypt file
+3) Decrypt file
+4) Create Signature
+5) Verify Signature
+6) File Operations
+7) Help
+8) Quit
+Choose 1-8? 8
