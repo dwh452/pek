@@ -1799,7 +1799,7 @@ def MENU_CREATE():
     (Q, d) = CREATE()
 
     pub = POINT_TO_PUBLIC_KEY(Q)
-    priv = INT_TO_PRIVATE_KEY(d)
+    priv = SCALAR_TO_PRIVATE_KEY(d)
 
     DQK = ENCODE_KEY(pub)
     DDK = ENCODE_KEY(priv)
