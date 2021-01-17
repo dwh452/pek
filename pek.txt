@@ -820,7 +820,7 @@ class BASE64_READER:
         self.cb = 0
         self.current_byte = 0
         self.got_lookahead = False
-        self.lookahead = False
+        self.lookahead = None
         self.got_error = False
         self.error_msg = False
         self.error_cnt = 0
@@ -1250,9 +1250,9 @@ def VERIFY(Q, e, signature):
 ######################################################################
 
 #
-# A key is a 2-tuple: (key_data, data)
+# A key is a 2-tuple: (key_type, data)
 #
-# key_data: is 0, 1, 2, or 3.
+# key_type: is 0, 1, 2, or 3.
 # data:     is an integer representing the private key, or public key x-coordinate
 #
 
@@ -1500,7 +1500,7 @@ def CMD_CREATE(args):
 
 def CMD_ENCRYPT(args):
     if len(args) != 5:
-        USAGE("incorrect number of arguments")
+        USAGE("incorrect number of arguments for 'encrypt'")
         return
 
     public_key = args[2]
@@ -1542,7 +1542,7 @@ def CMD_ENCRYPT(args):
 
 def CMD_DECRYPT(args):
     if len(args) != 5:
-        USAGE("incorrect number of arguments")
+        USAGE("incorrect number of arguments for 'decrypt'")
         return
 
     private_key = args[2]
@@ -1584,7 +1584,7 @@ def CMD_DECRYPT(args):
 
 def CMD_SIGN(args):
     if len(args) != 5:
-        USAGE("incorrect number of arguments")
+        USAGE("incorrect number of arguments for 'sign'")
         return
 
     private_key = args[2]
@@ -1629,7 +1629,7 @@ def CMD_SIGN(args):
 
 def CMD_VERIFY(args):
     if len(args) != 5:
-        USAGE("incorrect number of arguments")
+        USAGE("incorrect number of arguments for 'verify'")
         return
 
     public_key = args[2]
