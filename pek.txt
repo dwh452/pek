@@ -882,9 +882,8 @@ class BASE64_READER:
                 return True
 
     def GET_REMAINDER(self):
-        b = 7 - self.BIT_OFFSET(self.cb)
         v = self.current_byte >> self.BIT_OFFSET(self.cb)+1
-        return (b, v)
+        return v
 
     def READ(self, n):
         result = bytearray()
@@ -1291,15 +1290,16 @@ def DECODE_KEY(str):
     ss = io.StringIO(str)
     r = BASE64_READER(ss)
     result = r.READ(32)
-    (nbits, value) = r.GET_REMAINDER()
-    return (value, BYTES_TO_INT(result))
+    key_type = r.GET_REMAINDER()
+    data = BYTES_TO_INT(result)
+    return (key_type, data)
 
 def ENCODE_KEY(key):
-    (t, b) = key
+    (key_type, data) = key
     ss = io.StringIO()
-    w = BASE64_WRITER(ss, t)
-    b = INT_TO_BYTES(b, 32)
-    w.WRITE(b)
+    w = BASE64_WRITER(ss, key_type)
+    bytes = INT_TO_BYTES(data, 32)
+    w.WRITE(bytes)
     w.CLOSE()
     ss.seek(0)
     result = ss.read()
