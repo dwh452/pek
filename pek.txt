@@ -1307,14 +1307,9 @@ def ENCODE_KEY(key):
     return result
 
 def CHAR_TO_KEY_TYPE(ch):
-    if ch in "AQgwEUk0IYo4Mcs8":
-        return InvalidKey
-    elif ch in "BRhxFVl1JZp5Ndt9":
-        return PrivateKey
-    elif ch in "CSiyGWm2Kaq6Oeu+":
-        return PublicKeyEvenY
-    elif ch in "DTjzHXn3Lbr7Pfv/":
-        return PublicKeyOddY
+    DIGITS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    n = DIGITS.find(ch)
+    return n & 0x03
 
 def CHECK_PUBLIC_KEY(str):
     if len(str) != 43:
