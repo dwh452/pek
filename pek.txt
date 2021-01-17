@@ -1536,6 +1536,12 @@ def CMD_ENCRYPT(args):
         USAGE("{}: <public-key> argument {}".format(public_key, rc))
         return
 
+    pub = DECODE_KEY(public_key)
+    Q = PUBLIC_KEY_TO_POINT(pub)
+    if Q.x == None:
+        USAGE("{}: <public-key> argument is not valid".format(public_key))
+        return
+
     rc = CHECK_INPUT(input_file)
     if rc != None:
         USAGE("{}: {}".format(input_file, rc))
@@ -1548,11 +1554,6 @@ def CMD_ENCRYPT(args):
 
     i = OPEN_FILE(input_file, READ_BINARY)
     o = OPEN_FILE(output_file, WRITE_TEXT)
-    pub = DECODE_KEY(public_key)
-    Q = PUBLIC_KEY_TO_POINT(pub)
-    if Q.x == None:
-        USAGE("{}: <public-key> argument is not valid".format(public_key))
-        return
 
     rc = ENCRYPT(Q, i, o)
 
