@@ -102,7 +102,7 @@ Usage:
     <file-or-hash>   The filename to read and calculate the hash code for. Use "-" for standard input.
                      A hash code can be given instead. This is a 64-character string consisting of hex digits.
     <signature-out>  This is the signature filename to create, use "-" for standard output.
-    <signature-in>   This is the signature filename to read, use "-" for standard input.
+    <signature-in>   This is the signature filename to read.
 
 Examples:
     $ pek create
