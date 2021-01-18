@@ -139,8 +139,6 @@ import io
 import copy
 import struct
 
-import readline     # enables gnu readline to the interative menu DWH DWH DWH DON'T CHECK IN
-
 ######################################################################
 #
 # Section 1: Elliptic Curve

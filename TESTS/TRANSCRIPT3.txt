@@ -9,7 +9,7 @@ This transcript shows the use of "-". The other technique
 shown is to be able to copy and paste text from
 the terminal back into the terminal.
 
-This transcript show the use of default values when entering data.
+This transcript shows the use of default values when entering data.
 When a prompt includes text in square brackets. Such as,
 
    Enter public key [ePYL36kZkBisW1lZpu8AUPltR+AouKy+Vj33Tc0Qs6j]: 
