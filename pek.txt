@@ -1480,7 +1480,7 @@ Usage:
     <file-or-hash>   The filename to read and calculate the hash code for. Use "-" for standard input.
                      A hash code can be given instead. This is a 64-character string consisting of hex digits.
     <signature-out>  This is the signature filename to create, use "-" for standard output.
-    <signature-in>   This is the signature filename to read.
+    <signature-in>   This is the signature filename to read, use "-" for standard output.
 
 {}
 """.format(msg))
@@ -1636,6 +1636,10 @@ def CMD_VERIFY(args):
     input_file = args[3]
     sig_input = args[4]
 
+    if input_file == "-" and sig_input == "-":
+        USAGE("using \"-\" for both <sig-input> and <input_file> is not allowed")
+        return
+
     rc = CHECK_PUBLIC_KEY(public_key)
     if rc != None:
         USAGE("{}: <public-key> argument {}".format(public_key, rc))
@@ -1657,10 +1661,6 @@ def CMD_VERIFY(args):
         i = OPEN_FILE(input_file, READ_BINARY)
         e = SHA256(i)
         CLOSE_FILE(input_file, i)
-
-    if sig_input == "-":
-        USAGE("{}: standard input not allow for <sig-input>".format(sig_input, rc))
-        return
 
     rc = CHECK_INPUT(sig_input)
     if rc != None:
