@@ -139,6 +139,8 @@ import io
 import copy
 import struct
 
+import readline     # enables gnu readline to the interative menu DWH DWH DWH DON'T CHECK IN
+
 ######################################################################
 #
 # Section 1: Elliptic Curve
@@ -1480,7 +1482,7 @@ Usage:
     <file-or-hash>   The filename to read and calculate the hash code for. Use "-" for standard input.
                      A hash code can be given instead. This is a 64-character string consisting of hex digits.
     <signature-out>  This is the signature filename to create, use "-" for standard output.
-    <signature-in>   This is the signature filename to read, use "-" for standard input.
+    <signature-in>   This is the signature filename to read.
 
 {}
 """.format(msg))
@@ -1653,15 +1655,19 @@ def CMD_VERIFY(args):
         rc = CHECK_INPUT(input_file)
         if rc != None:
             USAGE("{}: {}".format(input_file, rc))
-            return False
+            return
         i = OPEN_FILE(input_file, READ_BINARY)
         e = SHA256(i)
         CLOSE_FILE(input_file, i)
 
+    if sig_input == "-":
+        USAGE("{}: standard input not allow for <sig-input>".format(sig_input, rc))
+        return
+
     rc = CHECK_INPUT(sig_input)
     if rc != None:
         USAGE("{}: {}".format(sig_input, rc))
-        return False
+        return
 
     i = OPEN_FILE(sig_input, READ_TEXT)
 
@@ -1669,16 +1675,16 @@ def CMD_VERIFY(args):
     r = rdr.READ(32)
     if len(r) != 32:
         USAGE("{}: error reading signature. unable to read r. len(32) != len({})".format(sig_input, len(r)))
-        return False
+        return
 
     s = rdr.READ(32)
     if len(s) != 32:
         USAGE("{}: error reading signature. unable to read s. len(32) != len({})".format(sig_input, len(s)))
-        return False
+        return
 
     if not rdr.EOF():
         USAGE("{}: error reading signature. data stream too long".format(sig_input))
-        return False
+        return
 
     CLOSE_FILE(sig_input, i)
 
@@ -1746,10 +1752,10 @@ Examples:
 #
 ######################################################################
 
-DQK  = ""   # Default public key (blank means not set)
-DDK  = ""   # Default private key (blank means not set)
-DF   = ""   # Default file name (blank means not set)
-DDIR = ""   # Default Directory (blank means not set)
+DQK  = ""   # Default public key
+DDK  = ""   # Default private key
+DF   = ""   # Default file name
+DDIR = ""   # Default Directory
 
 def INPUT(prompt):
     try:
