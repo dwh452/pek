@@ -96,7 +96,8 @@ else
 	echo '7 success (only valid if 5 and 6 were also successful)'
 fi
 
-
+######################################################################
+######################################################################
 
 #
 # Sign / Verify
@@ -108,18 +109,47 @@ grep -q GOOD $T2
 if [ $? -eq 0 ]; then
 	echo 8 success
 else
-	echo 9 fail
+	echo 8 fail
 fi
 
-echo 'HelloTest' | ./pek sign $PRIVATE_KEY - - > $T1
-echo 'HelloTestX' | ./pek verify $PUBLIC_KEY - $T1 > $T2
-grep -q BAD $T2
+######################################################################
+#
+# Testing that GOOD things happen when the hashcode mechanism used
+#
+HASH_CODE1=`echo 'HelloTest' | shasum -a 256 - | awk '{ print $1 }'`
+HASH_CODE2=`echo 'HelloTest' | shasum -a 256 - | awk '{ print $1 }'`
+
+./pek sign $PRIVATE_KEY $HASH_CODE1 - > $T1
+./pek verify $PUBLIC_KEY $HASH_CODE2 $T1 > $T2
+grep -q GOOD $T2
 
 if [ $? -eq 0 ]; then
 	echo 9 success
 else
 	echo 9 fail
 fi
+
+######################################################################
+#
+# Testing that BAD things happen when the messages are different, though
+#
+HASH_CODE1=`echo 'HelloTest' | shasum -a 256 - | awk '{ print $1 }'`
+HASH_CODE2=`echo 'XelloXest' | shasum -a 256 - | awk '{ print $1 }'`
+
+./pek sign $PRIVATE_KEY $HASH_CODE1 - > $T1
+./pek verify $PUBLIC_KEY $HASH_CODE2 $T1 > $T2
+grep -q BAD $T2
+
+if [ $? -eq 0 ]; then
+	echo 9.5 success
+else
+	echo 9.5 fail
+fi
+
+######################################################################
+#
+# Testing that BAD things happen when the signatures are different
+#
 
 echo 'HelloTest' | ./pek sign $PRIVATE_KEY - - | tr abc1 ABC0 > $T1
 echo 'HelloTest' | ./pek verify $PUBLIC_KEY - $T1 > $T2
@@ -128,9 +158,14 @@ grep -q BAD $T2
 if [ $? -eq 0 ]; then
 	echo 10 success
 else
-	# could fail is no 'o' in signature
+	# this could fail if no 'abc1' symbols in signature file
 	echo 10 fail
 fi
+
+######################################################################
+#
+# Testing that BAD things happen when the keys are different
+#
 
 OLD_PUB=$PUBLIC_KEY
 OLD_PRIV=$PRIVATE_KEY
@@ -150,6 +185,21 @@ if [ $? -eq 0 ]; then
 	echo 11 success
 else
 	echo 11 fail
+fi
+
+######################################################################
+
+#
+# Testing that BAD things happen when the messages are different
+#
+echo 'HelloTest1' | ./pek sign $PRIVATE_KEY - - > $T1
+echo 'HelloTest2' | ./pek verify $PUBLIC_KEY - $T1 > $T2
+grep -q BAD $T2
+
+if [ $? -eq 0 ]; then
+	echo 12 success
+else
+	echo 12 fail
 fi
 
 ######################################################################

@@ -1157,7 +1157,8 @@ def RANDOM256():
 def HASH_POINT(P):
     bytes = POINT_TO_BYTES(P)
     ss = io.BytesIO(bytes)
-    return INT_TO_BYTES(SHA256(ss), 32)
+    hc = SHA256(ss)
+    return INT_TO_BYTES(hc, 32)
 
 def CREATE():
     d = RANDOM256()
@@ -2179,7 +2180,6 @@ def MENU_CD():
     else:
         REPORT_ERROR("{}: {}\n".format(dir, rc))
         return False
-
     return False
 
 def MENU_DIR():
