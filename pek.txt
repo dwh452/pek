@@ -1229,6 +1229,10 @@ def SIGN(d, e):
 
 def VERIFY(Q, e, signature):
     (r, s) = signature
+    if r < 1 or r > N-1:
+        return False
+    if s < 1 or s > N-1:
+        return False
     s_inv = pow(s, N-2, N)        # fermat's little theorem
     u1 = s_inv * e % N
     u2 = s_inv * r % N
