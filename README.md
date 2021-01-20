@@ -119,8 +119,8 @@ Examples:
     $ shasum -a 256 MANIFESTO.doc
     6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b
 
-    $ pek sign   lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk 6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b MANIFESTO.sig
-    $ pek verify UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 6a82de9253f887f88e5a537dc9d8749a66fc28597fd3da60850ba3dd9acf085b MANIFESTO.sig
+    $ pek sign   lZCBMbLb8GP/IkeKcPVCeoNLju/ynXsC6MZzm3D3ASk 6a82de9253f887f88e5a537...f085b MANIFESTO.sig
+    $ pek verify UwcQDXZlP1kWjda3ngcJ4HzWsz+C4Ahth5ieidwu8n4 6a82de9253f887f88e5a537...f085b MANIFESTO.sig
     GOOD
 ```
 
