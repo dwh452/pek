@@ -1,6 +1,6 @@
 # Description
-`pek` is a command to encrypt and decrypt files using public/private keys.
-A secondary feature of `pek` is signing and verifying files using digital signatures.
+*pek* is a command to encrypt and decrypt files using public/private keys.
+A secondary feature of *pek* is signing and verifying files using digital signatures.
 Written for python 3.
 
 # Purpose
